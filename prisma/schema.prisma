@@ -1,0 +1,212 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Producer {
+  id           String        @id @default(uuid())
+  name         String
+  subdomain    String?       @unique
+  logoUrl      String?
+  users        User[]
+  events       Event[]
+  institutions Institution[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  role         String    // "SUPER_ADMIN", "PRODUCER_ADMIN", "STAFF", "JUDGE", "ANNOUNCER"
+  station      String?   // "REGISTRATION", "WARMUP_1", "SPRINGFLOOR", "WAITING", "COMPETING"
+  isSupervisor Boolean   @default(false)
+  producerId   String?   // Null for SUPER_ADMIN
+  producer     Producer? @relation(fields: [producerId], references: [id])
+  
+  phone                 String?   // Teléfono para envío de WhatsApp
+  password              String?   // Contraseña corta y fácil (ej. de 4-6 caracteres)
+  passwordExpiresAt     DateTime? // Fecha de expiración
+  isActive              Boolean   @default(false) // Si la cuenta está activa o suspendida
+  allowPasswordless     Boolean   @default(false) // Acceso directo sin contraseña
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Event {
+  id          String     @id @default(uuid())
+  name        String
+  date        DateTime
+  logoUrl     String?
+  judgesReady Boolean    @default(false)
+  
+  // Configuración de zonas del evento
+  warmupZonesCount      Int     @default(1)
+  springfloorZonesCount  Int     @default(1)
+  registrationZonesCount Int     @default(1) // Cantidad de mesas de registro en simultáneo
+  forceSameZone         Boolean @default(false)
+
+  // Alerta global del supervisor (broadcast a todo el staff)
+  globalAlert     String?  // Mensaje de alerta activo, null = sin alerta
+  globalAlertAt   DateTime? // Timestamp de cuándo se publicó
+
+  // Personalización Visual (Códigos HEX y Estilos)
+  pageBgColor           String? @default("#050b18")
+  pageBgGradientFrom    String? 
+  pageBgGradientVia     String? 
+  pageBgGradientTo      String? 
+
+  posterBgColorFrom     String? @default("#09101f")
+  posterBgColorVia      String? @default("#080d1a")
+  posterBgColorTo       String? @default("#050b18")
+  posterTextColor1      String? @default("#ffffff")
+  posterTextColor2      String? @default("#e2e8f0")
+  posterTextColor3      String? @default("#94a3b8")
+
+  fontFamily            String? @default("Inter")
+  titleColor            String? @default("#ffffff")
+  titleFontSize         String? @default("2xl")
+
+  tableHeaderBgColor    String? @default("rgba(255, 255, 255, 0.05)")
+  tableHeaderTextColor  String? @default("#9ca3af")
+  tableRowBgColor       String? @default("transparent")
+  tableRowHoverBgColor  String? @default("rgba(255, 255, 255, 0.03)")
+  tableRowTextColor     String? @default("#ffffff")
+
+
+  producerId  String
+  producer    Producer   @relation(fields: [producerId], references: [id])
+  schedules   Schedule[]
+  sessions    EventSession[]
+  teams       EventTeam[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model EventTeam {
+  id        String   @id @default(uuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, teamId])
+}
+
+model EventSession {
+  id                    String     @id @default(uuid())
+  eventId               String
+  event                 Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name                  String     // e.g. "Sábado Mañana", "Bloque 1"
+  date                  DateTime
+  
+  // Tiempos base (cuando inician los bloques)
+  registrationStartTime DateTime?
+  warmup1StartTime      DateTime?
+  springfloorStartTime  DateTime?
+  competitionStartTime  DateTime?
+
+  // Duraciones y espaciado (minutos)
+  timeBetweenTeams      Int @default(5)
+  registrationDuration  Int @default(5)
+  warmup1Duration       Int @default(5)
+  springfloorDuration   Int @default(5)
+  competitionDuration   Int @default(3)
+  staffCallTimeOffset   Int @default(5) // Tiempo antes para buscar equipos
+
+  zoneStartTimesJson    String?    // JSON con horas de inicio independientes por zona (ej: {"warmup1":{"A":"...", "B":"..."}})
+
+  schedules             Schedule[]
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+}
+
+model Institution {
+  id           String   @id @default(uuid())
+  name         String
+  city         String?  // Ciudad de origen
+  logoUrl      String?
+  headCoach    String?  // Encargado / Head Coach de la institución
+  headCoachPhone String? // Teléfono del encargado (fallback si el equipo no tiene)
+  type         String?  // "All Star", "Scholastic", "College", "University"
+  producerId   String
+  producer     Producer @relation(fields: [producerId], references: [id])
+  teams        Team[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Team {
+  id            String      @id @default(uuid())
+  name          String
+  division      String
+  category      String
+  level         String
+  athletesCount Int
+  season        String      @default("2024") // Temporada para no sobrecargar el sistema año a año
+  coach         String?     // Entrenador / Head Coach
+  coachPhone    String?     // Teléfono del entrenador para WhatsApp
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  schedules     Schedule[]
+  eventTeams    EventTeam[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Schedule {
+  id      String @id @default(uuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  eventSessionId String?
+  eventSession   EventSession? @relation(fields: [eventSessionId], references: [id], onDelete: Cascade)
+
+  // Tipo de Schedule Item
+  type    String @default("TEAM") // "TEAM" o "BREAK"
+
+  teamId  String?
+  team    Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  // Si es un Break
+  breakTitle    String?
+  showBreakTitle Boolean @default(true)
+  breakDuration Int?     // En minutos
+
+  isExhibition  Boolean @default(false)
+  
+  orderIndex Int // Orden de presentación
+
+  // Tiempos programados (Scheduled)
+  scheduledRegistration DateTime?
+  scheduledWarmup1      DateTime?
+  scheduledSpringfloor  DateTime?
+  scheduledPerformance  DateTime?
+
+  // Tiempos reales (Actual)
+  actualRegistration    DateTime?
+  actualWarmup1         DateTime?
+  actualSpringfloor     DateTime?
+  actualPerformance     DateTime?
+
+  // Estado del equipo
+  status String @default("PENDING")
+
+  // Asignación de Zonas Paralelas
+  registrationZone String @default("A") // Mesa de registro (A, B, C...)
+  warmupZone       String @default("A") // Zona de calentamiento (A, B, C...)
+  springfloorZone  String @default("A") // Tapete Springfloor (A, B, C...)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
