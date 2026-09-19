@@ -119,7 +119,6 @@ export default function AdminStaffList({ staffUsers, stations }: AdminStaffListP
     );
   }
 
-  return (
   const regularUsers = staffUsers.filter(u => !u.name.toLowerCase().includes("capacitaci") && !u.name.toLowerCase().includes("demo"));
   const demoUsers = staffUsers.filter(u => u.name.toLowerCase().includes("capacitaci") || u.name.toLowerCase().includes("demo"));
 
