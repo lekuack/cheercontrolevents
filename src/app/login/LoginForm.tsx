@@ -12,19 +12,7 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleCreateSuperAdmin = async () => {
-    setError(null);
-    try {
-      const res = await createTestSuperAdmin();
-      if (res.success) {
-        setEmail(res.email);
-        setPassword(res.password ?? "");
-        alert(`✅ Listo!\n\nEmail: ${res.email}\nContraseña: ${res.password}\n\nLos campos se han auto-completado. Presiona "Ingresar".`);
-      }
-    } catch {
-      setError("Error al crear el superadmin de pruebas.");
-    }
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,12 +107,7 @@ export default function LoginForm() {
         </form>
 
         <div className="flex flex-col gap-2 border-t border-white/5 pt-4 text-center">
-          <button
-            onClick={handleCreateSuperAdmin}
-            className="text-xs bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 py-2 rounded-lg transition-colors font-bold"
-          >
-            🧪 Generar Super Admin de Pruebas
-          </button>
+
           <Link href="/" className="text-xs text-gray-500 hover:text-white transition-colors mt-1">
             ← Volver al inicio
           </Link>

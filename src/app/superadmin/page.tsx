@@ -107,12 +107,48 @@ export default async function SuperAdminPage() {
                     <span>{producer._count.users} Usuarios</span>
                   </div>
                   
-                  <Link 
-                    href={`/superadmin/producer/${producer.id}`}
-                    className="mt-4 block text-center bg-white/5 hover:bg-white/10 border border-white/10 py-2 rounded-lg text-sm font-medium transition-colors relative z-10"
-                  >
-                    Ver Detalles
-                  </Link>
+                  <div className="flex gap-2 relative z-10 mt-4">
+                    <Link 
+                      href={`/superadmin/producer/${producer.id}`}
+                      className="flex-1 text-center bg-white/5 hover:bg-white/10 border border-white/10 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Ver Detalles
+                    </Link>
+                    <form action={async () => {
+                      "use server";
+                      const { toggleProducerStatus } = await import("./actions");
+                      const fd = new FormData();
+                      fd.append("producerId", producer.id);
+                      await toggleProducerStatus(fd);
+                    }}>
+                      <button 
+                        type="submit" 
+                        title={producer.isActive ? "Deshabilitar" : "Habilitar"}
+                        className={`p-2 rounded-lg border transition-colors ${
+                          producer.isActive 
+                            ? "bg-yellow-500/10 hover:bg-yellow-500/20 border-yellow-500/30 text-yellow-300" 
+                            : "bg-green-500/10 hover:bg-green-500/20 border-green-500/30 text-green-300"
+                        }`}
+                      >
+                        {producer.isActive ? "⏸️" : "▶️"}
+                      </button>
+                    </form>
+                    <form action={async () => {
+                      "use server";
+                      const { deleteProducer } = await import("./actions");
+                      const fd = new FormData();
+                      fd.append("producerId", producer.id);
+                      await deleteProducer(fd);
+                    }} onSubmit="return confirm('¿Seguro que deseas eliminar este productor y todos sus datos?')">
+                      <button 
+                        type="submit" 
+                        title="Eliminar"
+                        className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 transition-colors"
+                      >
+                        🗑️
+                      </button>
+                    </form>
+                  </div>
                 </div>
               ))}
             </div>

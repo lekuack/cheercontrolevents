@@ -79,12 +79,6 @@ export default async function ProducerEventPage({ params }: Props) {
             )}
             <span className="text-white font-semibold text-sm hidden sm:block">{producer.name}</span>
           </div>
-          <Link
-            href={`/p/${subdomain}/login`}
-            className="flex items-center gap-2 bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary px-4 py-2 rounded-full text-xs font-bold transition-all"
-          >
-            <span>🔑</span> Acceso Equipo
-          </Link>
         </div>
       </header>
 
@@ -150,7 +144,7 @@ export default async function ProducerEventPage({ params }: Props) {
             href={`/p/${subdomain}/login`}
             className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-primary transition-colors font-semibold"
           >
-            🔑 Acceso Equipo →
+            Acceso
           </Link>
         </div>
       </footer>

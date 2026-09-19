@@ -112,19 +112,6 @@ export default async function Home() {
           <p className="text-xs text-gray-600">
             CheerControl Events — Sistema de Gestión de Competencias
           </p>
-          <div className="flex items-center gap-4 text-xs text-gray-600">
-            <Link href="/login" className="hover:text-gray-400 transition-colors">
-              Acceso Operativo
-            </Link>
-            <span className="text-white/10">|</span>
-            <Link href="/admin-access" className="hover:text-gray-400 transition-colors">
-              Acceso Administrativo
-            </Link>
-            <span className="text-white/10">|</span>
-            <Link href="/superadmin" className="hover:text-gray-400 transition-colors">
-              Super Admin
-            </Link>
-          </div>
         </div>
       </footer>
     </main>

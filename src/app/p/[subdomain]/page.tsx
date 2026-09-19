@@ -13,6 +13,7 @@ export default async function ProducerPortalPage({ params }: Props) {
     where: { subdomain },
     include: {
       events: {
+        where: { isDemo: false },
         orderBy: { date: "asc" }
       }
     }
