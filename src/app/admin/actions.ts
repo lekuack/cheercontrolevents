@@ -1325,3 +1325,13 @@ export async function toggleHitZeroAwarded(scheduleId: string, awarded: boolean)
   revalidatePath(`/announcer/${schedule.eventId}`);
   return { success: true, hitZeroAwarded: awarded };
 }
+
+export async function getExistingLogos() {
+  const institutions = await prisma.institution.findMany({
+    where: { logoUrl: { not: null } },
+    select: { logoUrl: true },
+    distinct: ['logoUrl']
+  });
+  const uniqueLogos = Array.from(new Set(institutions.map(i => i.logoUrl).filter(url => url && url.length > 0))) as string[];
+  return uniqueLogos;
+}

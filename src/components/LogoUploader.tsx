@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { getExistingLogos } from "@/app/admin/actions";
 
 interface LogoUploaderProps {
   name: string;
@@ -18,8 +19,20 @@ export default function LogoUploader({
   const [value, setValue] = useState(defaultValue || "");
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [mode, setMode] = useState<"file" | "url">("file");
+  const [mode, setMode] = useState<"file" | "url" | "gallery">("file");
+  const [galleryLogos, setGalleryLogos] = useState<string[]>([]);
+  const [loadingGallery, setLoadingGallery] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (mode === "gallery" && galleryLogos.length === 0) {
+      setLoadingGallery(true);
+      getExistingLogos()
+        .then(logos => setGalleryLogos(logos || []))
+        .catch(err => console.error("Error loading gallery:", err))
+        .finally(() => setLoadingGallery(false));
+    }
+  }, [mode]);
 
   const handleFileUpload = async (file: File) => {
     if (!file) return;
@@ -94,6 +107,15 @@ export default function LogoUploader({
           >
             🔗 URL
           </button>
+          <button
+            type="button"
+            onClick={() => setMode("gallery")}
+            className={`px-2 py-0.5 rounded-md transition-all font-semibold cursor-pointer ${
+              mode === "gallery" ? "bg-primary text-white shadow" : "text-gray-400 hover:text-white"
+            }`}
+          >
+            🖼️ Galería
+          </button>
         </div>
       </div>
 
@@ -161,7 +183,7 @@ export default function LogoUploader({
             </div>
           )}
         </div>
-      ) : (
+      ) : mode === "url" ? (
         <div>
           <input
             type="url"
@@ -170,6 +192,34 @@ export default function LogoUploader({
             placeholder={placeholder}
             className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-primary transition-colors"
           />
+        </div>
+      ) : (
+        <div className="bg-black/30 border border-white/10 rounded-xl p-3 max-h-48 overflow-y-auto custom-scrollbar">
+          {loadingGallery ? (
+            <div className="text-center text-xs text-gray-400 py-4">Cargando galería...</div>
+          ) : galleryLogos.length === 0 ? (
+            <div className="text-center text-xs text-gray-400 py-4">No hay logos guardados previamente.</div>
+          ) : (
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+              {galleryLogos.map((logo, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setValue(logo)}
+                  className={`relative aspect-square rounded-lg border-2 overflow-hidden bg-black/50 hover:border-primary/50 transition-all ${
+                    value === logo ? "border-primary shadow-lg shadow-primary/20 scale-105" : "border-white/5"
+                  }`}
+                >
+                  <img src={logo} alt="Logo de galería" className="w-full h-full object-contain p-1" />
+                  {value === logo && (
+                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center backdrop-blur-[1px]">
+                      <span className="text-white text-lg drop-shadow-md">✅</span>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
