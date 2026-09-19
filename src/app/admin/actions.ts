@@ -779,9 +779,20 @@ export async function loginUser(email: string, password?: string) {
       return { error: "Contraseña incorrecta." };
     }
     const cookieStore = await cookies();
-    cookieStore.set("userId", user.id, { maxAge: 60 * 60 * 24 * 30, path: "/", httpOnly: true });
+    cookieStore.set("userId", user.id, { 
+      maxAge: 60 * 60 * 24 * 30, 
+      path: "/", 
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production"
+    });
     if (user.producerId) {
-      cookieStore.set("activeProducerId", user.producerId, { maxAge: 60 * 60 * 24 * 30, path: "/" });
+      cookieStore.set("activeProducerId", user.producerId, { 
+        maxAge: 60 * 60 * 24 * 30, 
+        path: "/",
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production"
+      });
     }
     return { success: true, userId: user.id, role: user.role };
   }
