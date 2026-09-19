@@ -35,17 +35,18 @@ export default function ProducerLoginForm({ producerId, producerName, producerLo
 
       const { role, userId } = res;
 
+      let targetUrl = `/p/${subdomain}`;
       if (role === "STAFF") {
-        router.push(`/staff?userId=${userId}`);
+        targetUrl = `/staff?userId=${userId}`;
       } else if (role === "JUDGE") {
-        router.push(`/judge?userId=${userId}`);
+        targetUrl = `/judge?userId=${userId}`;
       } else if (role === "ANNOUNCER") {
-        router.push(`/announcer?userId=${userId}`);
-      } else if (role === "PRODUCER_ADMIN") {
-        router.push("/admin");
-      } else {
-        router.push(`/p/${subdomain}`);
+        targetUrl = `/announcer?userId=${userId}`;
+      } else if (role === "PRODUCER_ADMIN" || role === "SUPER_ADMIN") {
+        targetUrl = "/admin";
       }
+
+      window.location.href = targetUrl;
     } catch {
       setError("Ocurrió un error inesperado. Intenta nuevamente.");
       setLoading(false);

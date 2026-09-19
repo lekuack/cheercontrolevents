@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { updateScheduleStatus, updateCoachPhone, updateScheduleZones } from "@/app/admin/actions";
+import { updateScheduleStatus, updateCoachPhone, updateScheduleZones, toggleHitZeroAwarded } from "@/app/admin/actions";
 import CountdownTimer from "@/components/CountdownTimer";
 
 interface Team {
@@ -21,13 +21,19 @@ interface Team {
 
 interface Schedule {
   id: string;
+  eventId: string;
+  orderIndex: number;
   status: string;
+  isExhibition: boolean;
   scheduledRegistration: string | Date | null;
+  scheduledWarmup1?: string | Date | null;
+  scheduledSpringfloor?: string | Date | null;
   scheduledPerformance: string | Date | null;
   warmupZone: string;
   springfloorZone: string;
+  isHitZero?: boolean;
+  hitZeroAwarded?: boolean;
   team?: Team | null;
-  isExhibition?: boolean;
   type?: string;
 }
 
@@ -81,6 +87,7 @@ export default function StaffScheduleList({
     "IN_TRANSIT": { next: "ARRIVED_COMPETITION", label: "Registrar Llegada a Competencia", color: "from-emerald-500 to-emerald-600" },
     "ARRIVED_COMPETITION": { next: "WAITING", label: "Mover a Espera (Boca Escenario)", color: "from-cyan-500 to-cyan-600" },
     "WAITING": { next: "COMPETING", label: "Presentar y Entrar a Competir", color: "from-green-500 to-emerald-600" },
+    "COMPETING": { next: "FINISHED", label: "🏁 Presentación Finalizada", color: "from-purple-600 to-indigo-600 font-extrabold text-white shadow-xl hover:bg-purple-700" },
   };
 
   const allStatuses = [
@@ -115,17 +122,17 @@ export default function StaffScheduleList({
       text = `Hola coach, su equipo ya se atrasó por ${minsLate} minutos, por favor acérquese a la zona de registro de inmediato.`;
     }
 
-    const phone = schedule.team.coachPhone ? schedule.team.coachPhone.replace(/\+/g, "") : "";
+    const phone = schedule.team?.coachPhone ? schedule.team.coachPhone.replace(/\+/g, "") : "";
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   };
 
   // Generador de mensaje de WhatsApp para Notificación de Cambio de Horarios
   const getScheduleChangeMsg = (schedule: Schedule) => {
     if (!mounted) return "#";
-    const formattedTime = new Date(schedule.scheduledPerformance).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const text = `Hola coach, le informamos que el horario de presentación de su equipo ${schedule.team.name} ha sido modificado. Su nueva hora estimada de presentación es a las ${formattedTime}.`;
+    const formattedTime = schedule.scheduledPerformance ? new Date(schedule.scheduledPerformance).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--:--";
+    const text = `Hola coach, le informamos que el horario de presentación de su equipo ${schedule.team?.name || ""} ha sido modificado. Su nueva hora estimada de presentación es a las ${formattedTime}.`;
     
-    const phone = schedule.team.coachPhone ? schedule.team.coachPhone.replace(/\+/g, "") : "";
+    const phone = schedule.team?.coachPhone ? schedule.team.coachPhone.replace(/\+/g, "") : "";
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   };
 
@@ -136,7 +143,7 @@ export default function StaffScheduleList({
         
         // Validar si el equipo se está procesando fuera del orden correlativo
         const isOutOfOrder = nextExpectedTeamId && schedule.id !== nextExpectedTeamId;
-        const confirmMsg = `⚠️ ALERTA DE ORDEN DE SALIDA:\n\nEstás procesando a "${schedule.team.name}" fuera de orden.\n\nEl siguiente equipo programado según el orden correlativo de salida es "${nextExpectedTeamName}".\n\n¿Estás seguro de que deseas continuar con el cambio de estado de "${schedule.team.name}"?`;
+        const confirmMsg = `⚠️ ALERTA DE ORDEN DE SALIDA:\n\nEstás procesando a "${schedule.team?.name || ""}" fuera de orden.\n\nEl siguiente equipo programado según el orden correlativo de salida es "${nextExpectedTeamName}".\n\n¿Estás seguro de que deseas continuar con el cambio de estado de "${schedule.team?.name || ""}"?`;
 
         return (
           <div 
@@ -153,7 +160,10 @@ export default function StaffScheduleList({
             <div className="flex justify-between items-start mb-3">
               <div className="min-w-0">
                 <h3 className="font-bold text-white text-lg leading-tight flex flex-wrap items-center gap-2">
-                  <span className="truncate">{schedule.team.name}</span>
+                  <span className="text-xs font-mono font-black text-amber-300 bg-amber-400/20 border border-amber-400/30 px-2 py-0.5 rounded-md shrink-0">
+                    #{schedule.orderIndex}
+                  </span>
+                  <span className="truncate">{schedule.team?.name}</span>
                   {schedule.isExhibition && (
                     <span className="text-[10px] text-purple-300 bg-purple-500/30 border border-purple-500/40 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider shrink-0">
                       (Exhibición)
@@ -163,7 +173,7 @@ export default function StaffScheduleList({
                     <span className="text-[9px] bg-warning/20 text-warning px-1.5 py-0.5 rounded font-extrabold shrink-0">FUERA DE ORDEN</span>
                   )}
                 </h3>
-                <p className="text-xs text-gray-400 truncate">{schedule.team.institution.name} • {schedule.team.division} {schedule.team.category}</p>
+                <p className="text-xs text-gray-400 truncate">{schedule.team?.institution?.name} • {schedule.team?.division} {schedule.team?.category}</p>
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                   {warmupZonesCount > 1 && (
                     <span className="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-bold">
@@ -180,7 +190,7 @@ export default function StaffScheduleList({
               <div className="text-right shrink-0">
                 <span className="text-[10px] text-gray-400 block">Horario Registro</span>
                 <span className="bg-white/10 px-2 py-0.5 rounded text-xs font-mono text-warning font-bold">
-                  {mounted ? new Date(schedule.scheduledRegistration).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--:--"}
+                  {mounted && schedule.scheduledRegistration ? new Date(schedule.scheduledRegistration).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--:--"}
                 </span>
               </div>
             </div>
@@ -188,8 +198,8 @@ export default function StaffScheduleList({
             {/* Información del Coach / Entrenador y WhatsApp */}
             <div className="my-3 pt-3 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="text-xs text-gray-400 space-y-1">
-                <span className="font-semibold text-white block">👨‍🏫 Coach: {schedule.team.coach || "Sin asignar"}</span>
-                {schedule.team.coachPhone ? (
+                <span className="font-semibold text-white block">👨‍🏫 Coach: {schedule.team?.coach || "Sin asignar"}</span>
+                {schedule.team?.coachPhone ? (
                   <span className="text-emerald-400 text-[10px] block">📞 {schedule.team.coachPhone}</span>
                 ) : (
                   <span className="text-red-400 text-[10px] block">⚠️ Sin teléfono registrado</span>
@@ -252,7 +262,7 @@ export default function StaffScheduleList({
 
               {/* Botón/Formulario WhatsApp */}
               <div className="flex gap-2">
-                {schedule.team.coachPhone ? (
+                {schedule.team?.coachPhone ? (
                   <div className="relative group shrink-0">
                     <button className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1 px-3 rounded-full text-xs flex items-center gap-1.5 cursor-pointer shadow transition-all">
                       <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
@@ -317,7 +327,7 @@ export default function StaffScheduleList({
                   </div>
                 ) : (
                   <form action={updateCoachPhone} className="flex gap-1">
-                    <input type="hidden" name="teamId" value={schedule.team.id || ""} />
+                    <input type="hidden" name="teamId" value={schedule.team?.id || ""} />
                     <input type="hidden" name="eventId" value={eventId} />
                     <input 
                       type="text" 
@@ -339,8 +349,40 @@ export default function StaffScheduleList({
               <div className="my-3 bg-black/40 p-3 rounded-lg border border-white/5 space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-400">Tiempo de margen:</span>
-                  <CountdownTimer targetDate={new Date(schedule.scheduledRegistration).toISOString()} />
+                  <CountdownTimer targetDate={schedule.scheduledRegistration ? new Date(schedule.scheduledRegistration).toISOString() : new Date().toISOString()} />
                 </div>
+              </div>
+            )}
+
+            {/* Banner de Hit Zero en Boca de Escenario / Lista del Staff */}
+            {schedule.isHitZero && (
+              <div className={`my-3 p-3 rounded-xl border flex items-center justify-between gap-3 ${
+                schedule.hitZeroAwarded
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                  : "bg-amber-400/20 border-amber-400/50 text-amber-200 animate-pulse shadow-lg"
+              }`}>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-xl shrink-0">🎯</span>
+                  <div>
+                    <span className="font-extrabold uppercase block">
+                      {schedule.hitZeroAwarded ? "✅ Reconocimiento Hit Zero Entregado" : "¡RECONOCIMIENTO HIT ZERO ASIGNADO!"}
+                    </span>
+                    <span className="text-[11px] opacity-80">
+                      {schedule.hitZeroAwarded ? "Premio otorgado en vivo" : "Notificar al equipo para alistarse a recibir su reconocimiento."}
+                    </span>
+                  </div>
+                </div>
+                {!schedule.hitZeroAwarded && (
+                  <form action={async (formData: FormData) => {
+                    const id = formData.get("scheduleId") as string;
+                    await toggleHitZeroAwarded(id, true);
+                  }}>
+                    <input type="hidden" name="scheduleId" value={schedule.id} />
+                    <button type="submit" className="bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-[10px] px-3 py-1.5 rounded-lg shadow cursor-pointer shrink-0">
+                      Marcar Listo
+                    </button>
+                  </form>
+                )}
               </div>
             )}
 

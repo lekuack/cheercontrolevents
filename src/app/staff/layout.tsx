@@ -22,8 +22,8 @@ export default function StaffLayout({ children }: { children: ReactNode }) {
         </div>
       </nav>
 
-      {/* Main Content (Mobile Optimized) */}
-      <main className="flex-1 p-4 pb-24 max-w-lg mx-auto w-full">
+      {/* Main Content (Responsive Layout) */}
+      <main className="flex-1 p-4 pb-24 max-w-5xl mx-auto w-full">
         {children}
       </main>
     </div>

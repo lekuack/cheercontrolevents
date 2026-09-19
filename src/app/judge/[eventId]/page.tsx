@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import JudgeRealtime from "@/components/JudgeRealtime";
+import DemoStationSwitcher from "@/components/DemoStationSwitcher";
+import JudgeHitZeroModal from "@/components/JudgeHitZeroModal";
+import { getSessionUser } from "@/app/admin/actions";
 
 export default async function JudgeEventPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
+  const user = await getSessionUser();
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
@@ -16,6 +20,14 @@ export default async function JudgeEventPage({ params }: { params: Promise<{ eve
   });
 
   if (!event) return <div className="text-white p-4">Evento no encontrado</div>;
+
+  if (user?.producerId && user.role !== "SUPER_ADMIN" && event.producerId !== user.producerId) {
+    return (
+      <div className="glass-panel p-8 text-center text-red-400 font-bold border border-red-500/30">
+        🚫 No tienes permisos para evaluar este evento.
+      </div>
+    );
+  }
 
   // Filtrar breaks del cronograma para los jueces
   event.schedules = event.schedules.filter(s => s.type !== "BREAK" && s.team) as any;
@@ -42,14 +54,18 @@ export default async function JudgeEventPage({ params }: { params: Promise<{ eve
   return (
     <div className="space-y-6">
       {/* Cabecera superior */}
-      <div className="flex items-center gap-4">
-        <Link href="/judge" className="text-xl bg-white/10 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20">
-          ←
-        </Link>
-        <div>
-          <h2 className="text-xl font-bold text-white">{event.name}</h2>
-          <p className="text-sm text-gray-400">Panel de Control de la Mesa de Jueces</p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/judge" className="text-xl bg-white/10 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20">
+            ←
+          </Link>
+          <div>
+            <h2 className="text-xl font-bold text-white">{event.name}</h2>
+            <p className="text-sm text-gray-400">Panel de Control de la Mesa de Jueces</p>
+          </div>
         </div>
+
+        <JudgeHitZeroModal eventId={eventId} schedules={event.schedules as any} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -58,49 +74,108 @@ export default async function JudgeEventPage({ params }: { params: Promise<{ eve
         <div className="lg:col-span-2 space-y-6">
           
           {/* Tarjeta del Equipo Actual en Pista */}
-          <div className="glass-panel p-6 border-l-4 border-l-success bg-gradient-to-r from-success/5 to-transparent relative overflow-hidden">
-            <div className="absolute top-4 right-4 bg-success/20 text-success text-xs font-bold font-mono px-3 py-1 rounded-full border border-success/30 animate-pulse">
-              🎥 COMPITIENDO AHORA
+          <div className="glass-panel p-6 border-l-4 border-l-success bg-gradient-to-r from-success/10 via-success/5 to-transparent relative overflow-hidden shadow-2xl">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <span className="bg-success/20 text-success text-xs font-black font-mono px-3 py-1 rounded-full border border-success/30 animate-pulse flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-success animate-ping"></span>
+                  🎥 COMPITIENDO AHORA
+                </span>
+                {currentPerformance?.isExhibition && (
+                  <span className="bg-purple-500/20 text-purple-300 text-xs font-bold px-2.5 py-1 rounded-full border border-purple-500/30">
+                    Exhibición
+                  </span>
+                )}
+              </div>
+              {currentPerformance && (
+                <span className="bg-white/10 text-warning font-mono font-black text-sm px-3 py-1 rounded-lg border border-warning/30">
+                  Orden #{currentPerformance.orderIndex}
+                </span>
+              )}
             </div>
 
-            <span className="text-xs text-gray-400 uppercase tracking-widest font-semibold block mb-2">Equipo en Escenario</span>
-            
             {currentPerformance ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-3xl font-black text-white leading-tight">{currentPerformance.team?.name}</h3>
-                  <p className="text-lg text-primary font-medium">{currentPerformance.team?.institution.name}</p>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  {currentPerformance.team?.institution.logoUrl ? (
+                    <img
+                      src={currentPerformance.team.institution.logoUrl}
+                      alt="Logo Club"
+                      className="w-16 h-16 rounded-xl object-cover bg-white/10 border border-white/20 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-3xl shrink-0">
+                      🏆
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-3xl sm:text-4xl font-black text-white leading-tight tracking-tight">
+                      {currentPerformance.team?.name}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-lg text-primary font-bold">{currentPerformance.team?.institution.name}</p>
+                      {currentPerformance.team?.institution.type && (
+                        <span className="text-[10px] bg-white/10 text-gray-300 px-2 py-0.5 rounded font-semibold">
+                          {currentPerformance.team.institution.type}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 border-t border-white/5 pt-4">
-                  <div>
-                    <span className="text-[10px] text-gray-400 block uppercase">División</span>
-                    <span className="text-sm font-bold text-white">{currentPerformance.team?.division}</span>
+                {/* Grid con la Ficha Técnica Completa de Evaluación */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-black/40 p-4 rounded-xl border border-white/10">
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
+                    <span className="text-[10px] text-gray-400 block uppercase font-bold tracking-wider mb-1">División</span>
+                    <span className="text-base font-black text-white block">{currentPerformance.team?.division}</span>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-gray-400 block uppercase">Categoría</span>
-                    <span className="text-sm font-bold text-white">{currentPerformance.team?.category}</span>
+
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
+                    <span className="text-[10px] text-gray-400 block uppercase font-bold tracking-wider mb-1">Categoría</span>
+                    <span className="text-base font-black text-white block">{currentPerformance.team?.category}</span>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-gray-400 block uppercase">Nivel</span>
-                    <span className="text-sm font-bold text-white">{currentPerformance.team?.level}</span>
+
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
+                    <span className="text-[10px] text-gray-400 block uppercase font-bold tracking-wider mb-1">Nivel de Dificultad</span>
+                    <span className="text-base font-black text-primary block">{currentPerformance.team?.level}</span>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-gray-400 block uppercase">Deportistas</span>
-                    <span className="text-sm font-bold text-warning">{currentPerformance.team?.athletesCount} Integrantes</span>
+
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
+                    <span className="text-[10px] text-gray-400 block uppercase font-bold tracking-wider mb-1">Integrantes en Pista</span>
+                    <span className="text-base font-black text-warning block">{currentPerformance.team?.athletesCount} Deportistas</span>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-gray-400 block uppercase">📍 Ciudad</span>
-                    <span className="text-sm font-bold text-white">{currentPerformance.team?.institution.city || "N/D"}</span>
+
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
+                    <span className="text-[10px] text-gray-400 block uppercase font-bold tracking-wider mb-1">📍 Origen / Ciudad</span>
+                    <span className="text-sm font-bold text-white block">{currentPerformance.team?.institution.city || "No registrada"}</span>
                   </div>
-                  <div>
-                    <span className="text-[10px] text-gray-400 block uppercase">👨‍🏫 Entrenador</span>
-                    <span className="text-sm font-bold text-white">{currentPerformance.team?.coach || "Sin Entrenador"}</span>
+
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
+                    <span className="text-[10px] text-gray-400 block uppercase font-bold tracking-wider mb-1">👨‍🏫 Entrenador / Coach</span>
+                    <span className="text-sm font-bold text-white block truncate" title={currentPerformance.team?.coach || ""}>
+                      {currentPerformance.team?.coach || "Sin asignar"}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
+                    <span className="text-[10px] text-gray-400 block uppercase font-bold tracking-wider mb-1">📞 Teléfono Coach</span>
+                    <span className="text-xs font-mono font-bold text-emerald-400 block truncate">
+                      {currentPerformance.team?.coachPhone || "Sin registro"}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/5">
+                    <span className="text-[10px] text-gray-400 block uppercase font-bold tracking-wider mb-1">⏱️ Hora Programada</span>
+                    <span className="text-xs font-mono font-bold text-gray-300 block">
+                      {currentPerformance.scheduledPerformance 
+                        ? new Date(currentPerformance.scheduledPerformance).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        : "En vivo"}
+                    </span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="py-8 text-center text-gray-400 italic">
+              <div className="py-12 text-center text-gray-400 italic">
                 Ningún equipo está en el escenario compitiendo en este momento.
               </div>
             )}
@@ -109,8 +184,8 @@ export default async function JudgeEventPage({ params }: { params: Promise<{ eve
           {/* Panel Realtime de Jueces Listos */}
           <JudgeRealtime 
             eventId={eventId} 
-            currentTeamName={currentPerformance?.team.name || null}
-            nextTeamName={nextPerformance?.team.name || null}
+            currentTeamName={currentPerformance?.team?.name || null}
+            nextTeamName={nextPerformance?.team?.name || null}
             initialReady={event.judgesReady}
           />
         </div>

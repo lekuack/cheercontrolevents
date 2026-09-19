@@ -15,7 +15,7 @@ interface AddTeamModalProps {
 }
 
 export default function AddTeamModal({ isOpen, onClose, availableTeams, sessions, currentSessionId, onAddTeams }: AddTeamModalProps) {
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -38,25 +38,32 @@ export default function AddTeamModal({ isOpen, onClose, availableTeams, sessions
   };
 
   const handleToggle = (id: string) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(item => item !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
   };
 
   const handleToggleAll = () => {
-    if (selectedIds.size === filteredTeams.length) {
-      setSelectedIds(new Set());
+    if (selectedIds.length === filteredTeams.length) {
+      setSelectedIds([]);
     } else {
-      setSelectedIds(new Set(filteredTeams.map(t => t.id)));
+      // Mantener orden: los ya seleccionados primero, luego los nuevos
+      const filteredIds = filteredTeams.map(t => t.id);
+      const newIds = filteredIds.filter(id => !selectedIds.includes(id));
+      setSelectedIds([...selectedIds, ...newIds]);
     }
   };
 
   const handleSubmit = async () => {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.length === 0) return;
 
     // Buscar si hay equipos seleccionados con duplicados en otras jornadas
-    const selectedTeams = availableTeams.filter(t => selectedIds.has(t.id));
+    const selectedTeams = selectedIds
+      .map(id => availableTeams.find(t => t.id === id))
+      .filter((t): t is TeamWithInstitution => t !== undefined);
+      
     const teamsWithDuplicates = selectedTeams.filter(t => getDuplicateSession(t) !== undefined);
 
     if (teamsWithDuplicates.length > 0) {
@@ -72,9 +79,9 @@ export default function AddTeamModal({ isOpen, onClose, availableTeams, sessions
     }
 
     setIsSubmitting(true);
-    await onAddTeams(Array.from(selectedIds));
+    await onAddTeams(selectedIds);
     setIsSubmitting(false);
-    setSelectedIds(new Set());
+    setSelectedIds([]);
     onClose();
   };
 
@@ -106,7 +113,7 @@ export default function AddTeamModal({ isOpen, onClose, availableTeams, sessions
                   <th className="p-3 w-10">
                     <input 
                       type="checkbox" 
-                      checked={selectedIds.size === filteredTeams.length && filteredTeams.length > 0}
+                      checked={selectedIds.length === filteredTeams.length && filteredTeams.length > 0}
                       onChange={handleToggleAll}
                       className="rounded bg-white/10 border-white/20 text-primary focus:ring-primary"
                     />
@@ -114,22 +121,27 @@ export default function AddTeamModal({ isOpen, onClose, availableTeams, sessions
                   <th className="p-3">Institución</th>
                   <th className="p-3">Equipo</th>
                   <th className="p-3">Categoría / Nivel</th>
-                  <th className="p-3">Alertas</th>
+                  <th className="p-3">Alertas / Orden</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredTeams.map((t) => {
                   const dupSession = getDuplicateSession(t);
+                  const selectedIndex = selectedIds.indexOf(t.id);
+                  const isSelected = selectedIndex !== -1;
+
                   return (
                     <tr 
                       key={t.id} 
                       onClick={() => handleToggle(t.id)}
-                      className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors"
+                      className={`border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors ${
+                        isSelected ? "bg-primary/10" : ""
+                      }`}
                     >
                       <td className="p-3">
                         <input 
                           type="checkbox" 
-                          checked={selectedIds.has(t.id)}
+                          checked={isSelected}
                           onChange={() => {}} // Handled by tr onClick
                           className="rounded bg-white/10 border-white/20 text-primary focus:ring-primary"
                         />
@@ -142,7 +154,12 @@ export default function AddTeamModal({ isOpen, onClose, availableTeams, sessions
                         </span>
                         <span className="text-gray-500 text-xs">{t.category}</span>
                       </td>
-                      <td className="p-3">
+                      <td className="p-3 flex items-center gap-2">
+                        {isSelected && (
+                          <span className="bg-primary/20 text-primary-light border border-primary/30 text-[10px] font-bold px-2 py-0.5 rounded">
+                            N° {selectedIndex + 1}
+                          </span>
+                        )}
                         {dupSession && (
                           <span className="bg-warning/10 text-warning text-[10px] px-2 py-1 rounded border border-warning/20 font-semibold">
                             ⚠️ {t.category} {t.division} en {dupSession.name}
@@ -163,10 +180,10 @@ export default function AddTeamModal({ isOpen, onClose, availableTeams, sessions
           </button>
           <button 
             onClick={handleSubmit} 
-            disabled={selectedIds.size === 0 || isSubmitting}
+            disabled={selectedIds.length === 0 || isSubmitting}
             className="btn-primary text-sm px-6 py-2 rounded-lg flex items-center gap-2"
           >
-            {isSubmitting ? "Añadiendo..." : `Añadir ${selectedIds.size} equipos`}
+            {isSubmitting ? "Añadiendo..." : `Añadir ${selectedIds.length} equipos`}
           </button>
         </div>
       </div>

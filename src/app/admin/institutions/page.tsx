@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { createInstitution } from "../actions";
 import InstitutionCard from "@/components/InstitutionCard";
+import LogoUploader from "@/components/LogoUploader";
 import { cookies } from "next/headers";
 import ProducerScopeSelector from "@/components/ProducerScopeSelector";
 
@@ -107,15 +108,10 @@ export default async function AdminInstitutionsPage() {
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors"
                 />
               </div>
-              <div>
-                <label className="block text-sm text-gray-300 mb-1">URL del Logo</label>
-                <input
-                  name="logoUrl"
-                  type="url"
-                  placeholder="https://..."
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors"
-                />
-              </div>
+              <LogoUploader
+                name="logoUrl"
+                label="Logo del Club / Institución"
+              />
               <button
                 type="submit"
                 className="w-full btn-primary mt-2"

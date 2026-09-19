@@ -3,6 +3,8 @@
 import { useState } from "react";
 import LineupPoster from "@/components/LineupPoster";
 import PublicScheduleTable from "@/components/PublicScheduleTable";
+import TvLiveDisplay from "@/components/TvLiveDisplay";
+import WebInteractiveLiveDisplay from "@/components/WebInteractiveLiveDisplay";
 import { Team, Institution, EventSession, Schedule, Event } from "@prisma/client";
 
 type TeamWithInstitution = Team & { institution: Institution };
@@ -34,6 +36,8 @@ export default function PublicEventTabs({ event, isToday }: Props) {
   const teams = event.teams.map(et => et.team);
   const totalTeams = teams.length;
   const sessions = event.sessions;
+
+  const allSchedules = sessions.flatMap(s => s.schedules);
 
   // Primer horario de inicio de competencia en toda la jornada
   const firstCompetitionStart = sessions
@@ -210,48 +214,13 @@ export default function PublicEventTabs({ event, isToday }: Props) {
         </div>
       )}
 
-      {/* ── PESTAÑA: EN VIVO ── */}
+      {/* ── PESTAÑA: EN VIVO INTERACTIVO WEB ── */}
       {activeTab === "envivo" && (
         <div className="pt-4">
-          <div className="glass-panel rounded-2xl border border-red-500/10 p-8 text-center space-y-4">
-            {isToday ? (
-              <>
-                <div className="flex items-center justify-center gap-2">
-                  <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                  <span className="text-red-400 font-black text-lg uppercase tracking-widest">En Vivo</span>
-                  <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                </div>
-                <p className="text-gray-500 text-sm max-w-xs mx-auto">
-                  El estado en tiempo real del evento estará disponible aquí durante la competencia.
-                </p>
-                <div className="grid grid-cols-3 gap-3 mt-6 max-w-sm mx-auto">
-                  {["Registrando", "Calentando", "Compitiendo"].map(label => (
-                    <div key={label} className="bg-white/3 border border-white/5 rounded-xl p-3 text-center">
-                      <div className="text-2xl font-black text-gray-700">–</div>
-                      <div className="text-[10px] text-gray-600 mt-1">{label}</div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[10px] text-gray-700 mt-4">Próximamente disponible</p>
-              </>
-            ) : (
-              <>
-                <p className="text-4xl">🗓️</p>
-                <p className="text-gray-400 font-bold">El evento aún no ha comenzado</p>
-                <p className="text-gray-600 text-xs">
-                  Esta sección mostrará el estado en tiempo real el día del evento.
-                </p>
-                <p className="text-[10px] text-gray-700 mt-2">
-                  Fecha del evento:{" "}
-                  <span className="text-primary font-semibold" suppressHydrationWarning>
-                    {new Date(event.date).toLocaleDateString("es-CL", {
-                      weekday: "long", day: "numeric", month: "long"
-                    })}
-                  </span>
-                </p>
-              </>
-            )}
-          </div>
+          <WebInteractiveLiveDisplay
+            eventId={event.id}
+            schedules={allSchedules as any}
+          />
         </div>
       )}
     </div>

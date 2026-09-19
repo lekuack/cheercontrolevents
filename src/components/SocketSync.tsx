@@ -20,6 +20,11 @@ export default function SocketSync({ eventId }: { eventId: string }) {
       router.refresh();
     });
 
+    socket.on("hit-zero-updated", () => {
+      console.log("[WS] Hit zero updated, refreshing page data...");
+      router.refresh();
+    });
+
     return () => {
       socket.disconnect();
     };

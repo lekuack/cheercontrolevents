@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { updateScheduleStatus } from "@/app/admin/actions";
+import { cookies } from "next/headers";
+import { updateScheduleStatus, toggleHitZeroAwarded } from "@/app/admin/actions";
 import CountdownTimer from "@/components/CountdownTimer";
 import SocketSync from "@/components/SocketSync";
 import StaffScheduleList from "@/components/StaffScheduleList";
 import SupervisorDashboard from "@/components/SupervisorDashboard";
+import DemoStationSwitcher from "@/components/DemoStationSwitcher";
 
 interface SearchParams {
   userId?: string;
@@ -19,7 +21,9 @@ export default async function StaffEventTrackerPage({
   searchParams: Promise<SearchParams>;
 }) {
   const { eventId } = await params;
-  const { userId, activeStation } = await searchParams;
+  const { userId: searchUserId, activeStation } = await searchParams;
+  const cookieStore = await cookies();
+  const userId = searchUserId || cookieStore.get("userId")?.value;
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
@@ -47,6 +51,13 @@ export default async function StaffEventTrackerPage({
 
     return (
       <div className="space-y-6">
+        {event.isDemo && (
+          <DemoStationSwitcher
+            eventId={event.id}
+            demoPin={event.demoPin || "1234"}
+            activeRole="STAFF"
+          />
+        )}
         <div className="flex items-center gap-4 mb-6">
           <Link href="/staff" className="text-xl bg-white/10 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20">
             ←
@@ -129,8 +140,61 @@ export default async function StaffEventTrackerPage({
     where: { id: userId }
   });
 
-  if (!currentStaff || currentStaff.role !== "STAFF") {
-    return <div className="text-white p-4">Usuario de Staff no válido</div>;
+  if (!currentStaff || (currentStaff.role !== "STAFF" && currentStaff.role !== "ADMIN" && currentStaff.role !== "SUPERADMIN")) {
+    const activeStaffs = await prisma.user.findMany({
+      where: {
+        producerId: event.producerId,
+        role: "STAFF"
+      }
+    });
+
+    return (
+      <div className="space-y-6">
+        {event.isDemo && (
+          <DemoStationSwitcher
+            eventId={event.id}
+            demoPin={event.demoPin || "1234"}
+            activeRole="STAFF"
+          />
+        )}
+        <div className="glass-panel p-8 text-center space-y-4 max-w-lg mx-auto my-12 border border-warning/30 bg-slate-900/90 rounded-2xl shadow-2xl">
+          <div className="w-16 h-16 bg-warning/20 text-warning rounded-full flex items-center justify-center text-3xl mx-auto">
+            👤
+          </div>
+          <h2 className="text-2xl font-black text-white">Sesión de Staff requerida</h2>
+          <p className="text-sm text-gray-300">
+            La cuenta actual <span className="font-mono bg-white/10 px-2 py-0.5 rounded text-amber-300">({currentStaff ? currentStaff.role : "Sesión expirada"})</span> no cuenta con el perfil de Staff asignado para este control operacional.
+          </p>
+
+          {activeStaffs.length > 0 && (
+            <div className="pt-4 border-t border-white/10 space-y-3">
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Selecciona un perfil de Staff activo:</p>
+              <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
+                {activeStaffs.map(st => (
+                  <Link
+                    key={st.id}
+                    href={`/staff/${event.id}?userId=${st.id}`}
+                    className="block p-3 bg-white/5 hover:bg-primary/20 border border-white/10 rounded-xl text-left transition-colors"
+                  >
+                    <span className="font-bold text-white block text-sm">{st.name}</span>
+                    <span className="text-[10px] text-gray-400">{st.station || "Estación por defecto"}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="pt-4">
+            <Link
+              href="/staff"
+              className="inline-block bg-primary text-white font-bold px-6 py-2.5 rounded-xl hover:bg-primary-light transition-all text-sm shadow-lg"
+            >
+              🏠 Volver a Selección de Evento
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Las estaciones asignadas vienen separadas por comas (ej. "RUNNER,REGISTRATION")
@@ -142,15 +206,11 @@ export default async function StaffEventTrackerPage({
   const activeWarmupZones = Array.from({ length: event.warmupZonesCount || 1 }, (_, i) => `WARMUP_1_${getZoneLetter(i)}`);
   const activeSpringfloorZones = Array.from({ length: event.springfloorZonesCount || 1 }, (_, i) => `SPRINGFLOOR_${getZoneLetter(i)}`);
 
-  const assignedStations = rawStations.filter(stationVal => {
-    // Excluir valores legacy sin sufijo de zona cuando el evento usa el nuevo formato
-    if (stationVal === "WARMUP_1") {
-      // Solo permitir si el evento no tiene zonas (legado), de lo contrario ignorar
-      return false;
-    }
-    if (stationVal === "SPRINGFLOOR") {
-      return false;
-    }
+  const assignedStations = rawStations.map(s => {
+    if (s === "WARMUP_1") return "WARMUP_1_A";
+    if (s === "SPRINGFLOOR") return "SPRINGFLOOR_A";
+    return s;
+  }).filter(stationVal => {
     if (stationVal.startsWith("WARMUP_1_")) {
       return activeWarmupZones.includes(stationVal);
     }
@@ -190,15 +250,7 @@ export default async function StaffEventTrackerPage({
             warmupZonesCount: event.warmupZonesCount,
             springfloorZonesCount: event.springfloorZonesCount,
             forceSameZone: event.forceSameZone,
-            schedules: event.schedules.map(s => ({
-              id: s.id,
-              status: s.status,
-              warmupZone: s.warmupZone,
-              springfloorZone: s.springfloorZone,
-              orderIndex: s.orderIndex,
-              scheduledPerformance: s.scheduledPerformance,
-              team: { name: s.team?.name, institution: { name: s.team?.institution.name } }
-            }))
+            schedules: event.schedules as any
           }} />
         </div>
       );
@@ -224,38 +276,42 @@ export default async function StaffEventTrackerPage({
     "WARMUP_1": "🔥 Calentamiento",
     "SPRINGFLOOR": "🤸 Área de Springfloor",
     "TRANSIT": "🔀 Trayecto / Traslado (Calentamiento a Pista)",
+    "WAITING": "🚪 Boca de Escenario / En Espera",
     "COMPETING": "🏟️ Pista de Competencia"
   };
 
   const getFilteredSchedules = (schedules: typeof event.schedules) => {
-    // Soporte para zonas dinámicas: WARMUP_1_A, WARMUP_1_B, SPRINGFLOOR_A, etc.
+    let filtered: typeof schedules = [];
     if (currentStation === "RUNNER") {
-      return schedules.filter(s => s.status === "PENDING");
-    }
-    if (currentStation === "REGISTRATION") {
-      return schedules.filter(s => ["PENDING", "IN_REGISTRATION"].includes(s.status));
-    }
-    if (currentStation.startsWith("WARMUP_1_") || currentStation === "WARMUP_1") {
+      filtered = schedules.filter(s => s.status === "PENDING");
+    } else if (currentStation === "REGISTRATION") {
+      filtered = schedules.filter(s => ["PENDING", "IN_REGISTRATION"].includes(s.status));
+    } else if (currentStation.startsWith("WARMUP_1_") || currentStation === "WARMUP_1") {
       const zone = currentStation.replace("WARMUP_1_", "");
-      return schedules.filter(s => 
+      filtered = schedules.filter(s => 
         ["REGISTERED", "ARRIVED_WARMUP", "WARMING_UP", "FINISHED_WARMUP"].includes(s.status) &&
         (currentStation === "WARMUP_1" || s.warmupZone === zone)
       );
-    }
-    if (currentStation.startsWith("SPRINGFLOOR_") || currentStation === "SPRINGFLOOR") {
+    } else if (currentStation.startsWith("SPRINGFLOOR_") || currentStation === "SPRINGFLOOR") {
       const zone = currentStation.replace("SPRINGFLOOR_", "");
-      return schedules.filter(s =>
+      filtered = schedules.filter(s =>
         ["FINISHED_WARMUP", "ARRIVED_SPRINGFLOOR", "WARMING_UP_SPRINGFLOOR", "FINISHED_SPRINGFLOOR"].includes(s.status) &&
         (currentStation === "SPRINGFLOOR" || s.springfloorZone === zone)
       );
+    } else if (currentStation === "TRANSIT") {
+      filtered = schedules.filter(s => ["FINISHED_SPRINGFLOOR", "IN_TRANSIT"].includes(s.status));
+    } else if (currentStation === "WAITING" || currentStation === "COMPETING") {
+      const activeTeams = schedules.filter(s => ["IN_TRANSIT", "ARRIVED_COMPETITION", "WAITING", "COMPETING"].includes(s.status));
+      const finishedTeams = schedules.filter(s => s.status === "FINISHED");
+      filtered = [...activeTeams, ...finishedTeams];
+    } else {
+      filtered = schedules;
     }
-    if (currentStation === "TRANSIT") {
-      return schedules.filter(s => ["FINISHED_SPRINGFLOOR", "IN_TRANSIT"].includes(s.status));
-    }
-    if (currentStation === "COMPETING") {
-      return schedules.filter(s => ["ARRIVED_COMPETITION", "WAITING"].includes(s.status));
-    }
-    return schedules;
+
+    // Mover equipos finalizados (FINISHED) al final de la lista, manteniendo el orden de los activos arriba
+    const active = filtered.filter(s => s.status !== "FINISHED");
+    const finished = filtered.filter(s => s.status === "FINISHED");
+    return [...active, ...finished];
   };
 
   const filteredSchedules = getFilteredSchedules(event.schedules);
@@ -311,10 +367,21 @@ export default async function StaffEventTrackerPage({
 
   // Encontrar el primer equipo pendiente de competir
   const nextScheduledTeam = event.schedules.find(s => !["FINISHED", "COMPETING"].includes(s.status));
-  const isEventDelayed = nextScheduledTeam && new Date() > new Date(nextScheduledTeam.scheduledPerformance);
+  const isEventDelayed = nextScheduledTeam && nextScheduledTeam.scheduledPerformance && new Date() > new Date(nextScheduledTeam.scheduledPerformance);
+
+  // Equipos con Hit Zero para alertas de Boca de Escenario
+  const pendingHitZeroStaff = event.schedules.filter(s => s.isHitZero && !s.hitZeroAwarded);
 
   return (
     <div className="space-y-6">
+      {event.isDemo && (
+        <DemoStationSwitcher
+          eventId={event.id}
+          demoPin={event.demoPin || "1234"}
+          activeRole={currentStaff.isSupervisor ? "SUPERVISOR" : "STAFF"}
+          activeStation={currentStation}
+        />
+      )}
       <SocketSync eventId={eventId} />
 
       {/* Banner de Alerta Global del Supervisor */}
@@ -375,6 +442,7 @@ export default async function StaffEventTrackerPage({
                    stationVal.startsWith("SPRINGFLOOR_") ? `🤸 Spring ${stationVal.replace("SPRINGFLOOR_", "")}` :
                    stationVal === "SPRINGFLOOR" ? "🤸 Spring" :
                    stationVal === "TRANSIT" ? "🔀 Traslado" :
+                   stationVal === "WAITING" ? "🚪 Boca Escenario" :
                    stationVal === "COMPETING" ? "🏟️ Pista" : "Estación"}
                 </Link>
               ))}
@@ -384,7 +452,7 @@ export default async function StaffEventTrackerPage({
       </div>
 
       {/* Alerta de Escenario Vacío */}
-      {isStageEmpty && (["WARMUP_1", "SPRINGFLOOR", "TRANSIT", "COMPETING"].includes(currentStation) || currentStation.startsWith("WARMUP_1_") || currentStation.startsWith("SPRINGFLOOR_")) && (
+      {isStageEmpty && (["WARMUP_1", "SPRINGFLOOR", "TRANSIT", "WAITING", "COMPETING"].includes(currentStation) || currentStation.startsWith("WARMUP_1_") || currentStation.startsWith("SPRINGFLOOR_")) && (
         <div className="bg-red-500/10 border-2 border-red-500 text-red-200 p-5 rounded-2xl shadow-xl animate-pulse space-y-2">
           <div className="flex items-center gap-2">
             <span className="text-xl">🚨</span>
@@ -416,62 +484,117 @@ export default async function StaffEventTrackerPage({
         </p>
       </div>
 
-      {/* SECCIÓN ESPECIAL FIJA: Equipo en Competencia (Solo en la Pista de Competencia) */}
-      {currentStation === "COMPETING" && (
-        <div className="glass-panel p-5 border-l-4 border-l-success bg-gradient-to-r from-success/5 to-transparent space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-success font-black tracking-widest uppercase">Pista ocupada actualmente</span>
-            <span className="text-[10px] bg-success/20 text-success px-2 py-0.5 rounded-full font-bold animate-pulse border border-success/30">EN VIVO</span>
+      {/* Banner Superior Prominente de Hit Zero Notificados (Móvil y Escritorio) */}
+      {(currentStation === "WAITING" || currentStation === "COMPETING") && pendingHitZeroStaff.length > 0 && (
+        <div className="glass-panel p-4 border-2 border-amber-400/60 bg-gradient-to-r from-amber-500/15 via-amber-600/10 to-amber-500/15 rounded-2xl shadow-xl space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl animate-bounce">🎯</span>
+              <div>
+                <h3 className="font-black text-amber-300 text-sm uppercase tracking-wide flex items-center gap-2">
+                  <span>Equipos con Hit Zero Otorgado</span>
+                  <span className="bg-amber-400 text-black text-xs font-black px-2 py-0.5 rounded-full">
+                    {pendingHitZeroStaff.length}
+                  </span>
+                </h3>
+                <p className="text-[11px] text-amber-200/90">Avisar a los equipos en boca de escenario antes de que se retiren</p>
+              </div>
+            </div>
+            <span className="hidden sm:inline-block text-[10px] text-amber-300 font-bold bg-amber-400/20 px-3 py-1 rounded-full border border-amber-400/30">
+              Notificación en tiempo real ⚡
+            </span>
           </div>
 
-          {currentlyCompeting ? (
-            <div>
-              <div className="mb-4">
-                <h3 className="text-2xl font-black text-white leading-tight">{currentlyCompeting.team?.name}</h3>
-                <p className="text-sm text-primary font-semibold">{currentlyCompeting.team?.institution.name}</p>
-                <div className="text-[11px] text-gray-400 mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
-                  <span>Ciudad: {currentlyCompeting.team?.institution.city || "N/D"}</span>
-                  <span>Cat: {currentlyCompeting.team?.category}</span>
-                  <span>Atletas: {currentlyCompeting.team?.athletesCount}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {pendingHitZeroStaff.map((schedule) => (
+              <div key={schedule.id} className="p-3.5 rounded-xl border bg-slate-950/80 border-amber-400/50 shadow-md flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-[10px] font-mono font-bold text-amber-300 bg-amber-400/20 px-1.5 py-0.5 rounded shrink-0">#{schedule.orderIndex}</span>
+                    <p className="font-black text-white text-sm truncate">{schedule.team?.name}</p>
+                  </div>
+                  <p className="text-xs text-amber-200/80 truncate mt-0.5">{schedule.team?.institution.name}</p>
                 </div>
+
+                <form action={async (formData: FormData) => {
+                  "use server";
+                  const id = formData.get("scheduleId") as string;
+                  await toggleHitZeroAwarded(id, true);
+                }} className="shrink-0">
+                  <input type="hidden" name="scheduleId" value={schedule.id} />
+                  <button
+                    type="submit"
+                    className="bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs py-2 px-3.5 rounded-xl shadow-md border border-emerald-300/50 transition-all active:scale-95 cursor-pointer shrink-0 flex items-center gap-1.5"
+                  >
+                    <span>🎤</span>
+                    <span>Anunciado</span>
+                  </button>
+                </form>
               </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-              <form action={updateScheduleStatus}>
-                <input type="hidden" name="scheduleId" value={currentlyCompeting.id} />
-                <input type="hidden" name="newStatus" value="FINISHED" />
-                <input type="hidden" name="eventId" value={eventId} />
-                <button
-                  type="submit"
-                  className="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-red-600 to-rose-700 text-white shadow-xl hover:shadow-red-600/10 hover:brightness-105 active:scale-98 transition-all cursor-pointer text-base uppercase tracking-wider"
-                >
-                  ⏹️ Finalizar Presentación Actual
-                </button>
-              </form>
+      {/* Vista Principal de la Estación */}
+      <div className="space-y-6">
+        {/* SECCIÓN ESPECIAL FIJA: Equipo en Competencia (Solo en la Pista de Competencia) */}
+        {currentStation === "COMPETING" && (
+          <div className="glass-panel p-5 border-l-4 border-l-success bg-gradient-to-r from-success/5 to-transparent space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-success font-black tracking-widest uppercase">Pista ocupada actualmente</span>
+              <span className="text-[10px] bg-success/20 text-success px-2 py-0.5 rounded-full font-bold animate-pulse border border-success/30">EN VIVO</span>
             </div>
-          ) : (
-            <p className="text-sm text-gray-400 italic py-3 text-center">No hay ningún equipo realizando su presentación en este momento.</p>
-          )}
-        </div>
-      )}
 
-      {/* Lista Principal */}
-      {filteredSchedules.length === 0 ? (
-        <div className="glass-panel p-8 text-center text-gray-400 text-sm">
-          No hay equipos {currentStation === "RUNNER" ? "pendientes de registro" : "en esta estación"} en este momento.
-        </div>
-      ) : (
-        <StaffScheduleList
-          schedules={filteredSchedules}
-          currentStation={currentStation}
-          eventId={eventId}
-          isSupervisor={currentStaff.isSupervisor}
-          nextExpectedTeamId={nextExpectedTeam?.id || null}
-          nextExpectedTeamName={nextExpectedTeam?.team.name || null}
-          warmupZonesCount={event.warmupZonesCount}
-          springfloorZonesCount={event.springfloorZonesCount}
-          forceSameZone={event.forceSameZone}
-        />
-      )}
+            {currentlyCompeting ? (
+              <div>
+                <div className="mb-4">
+                  <h3 className="text-2xl font-black text-white leading-tight">{currentlyCompeting.team?.name}</h3>
+                  <p className="text-sm text-primary font-semibold">{currentlyCompeting.team?.institution.name}</p>
+                  <div className="text-[11px] text-gray-400 mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                    <span>Ciudad: {currentlyCompeting.team?.institution.city || "N/D"}</span>
+                    <span>Cat: {currentlyCompeting.team?.category}</span>
+                    <span>Atletas: {currentlyCompeting.team?.athletesCount}</span>
+                  </div>
+                </div>
+
+                <form action={updateScheduleStatus}>
+                  <input type="hidden" name="scheduleId" value={currentlyCompeting.id} />
+                  <input type="hidden" name="newStatus" value="FINISHED" />
+                  <input type="hidden" name="eventId" value={eventId} />
+                  <button
+                    type="submit"
+                    className="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-red-600 to-rose-700 text-white shadow-xl hover:shadow-red-600/10 hover:brightness-105 active:scale-98 transition-all cursor-pointer text-base uppercase tracking-wider"
+                  >
+                    ⏹️ Finalizar Presentación Actual
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 italic py-3 text-center">No hay ningún equipo realizando su presentación en este momento.</p>
+            )}
+          </div>
+        )}
+
+        {/* Lista Principal */}
+        {filteredSchedules.length === 0 ? (
+          <div className="glass-panel p-8 text-center text-gray-400 text-sm">
+            No hay equipos {currentStation === "RUNNER" ? "pendientes de registro" : "en esta estación"} en este momento.
+          </div>
+        ) : (
+          <StaffScheduleList
+            schedules={filteredSchedules}
+            currentStation={currentStation}
+            eventId={eventId}
+            isSupervisor={currentStaff.isSupervisor}
+            nextExpectedTeamId={nextExpectedTeam?.id || null}
+            nextExpectedTeamName={nextExpectedTeam?.team?.name || null}
+            warmupZonesCount={event.warmupZonesCount}
+            springfloorZonesCount={event.springfloorZonesCount}
+            forceSameZone={event.forceSameZone}
+          />
+        )}
+      </div>
 
       {/* Accordion para Ver Todos los Equipos y Manejar Incidencias Fuera de la Estación (Solo Supervisor) */}
       {currentStaff.isSupervisor && (

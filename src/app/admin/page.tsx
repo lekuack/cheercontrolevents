@@ -3,6 +3,7 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { createEvent } from "./actions";
 import AdminEventList from "@/components/AdminEventList";
+import LogoUploader from "@/components/LogoUploader";
 import { cookies } from "next/headers";
 import ProducerScopeSelector from "@/components/ProducerScopeSelector";
 
@@ -22,20 +23,20 @@ export default async function AdminPage() {
   if (user?.role === "SUPER_ADMIN" && activeProducerId) {
     producer = await prisma.producer.findUnique({
       where: { id: activeProducerId },
-      include: { events: true }
+      include: { events: { orderBy: { createdAt: "desc" } } }
     });
   }
 
   if (!producer && user?.producerId) {
     producer = await prisma.producer.findUnique({
       where: { id: user.producerId },
-      include: { events: true }
+      include: { events: { orderBy: { createdAt: "desc" } } }
     });
   }
 
   if (!producer) {
     producer = await prisma.producer.findFirst({
-      include: { events: true }
+      include: { events: { orderBy: { createdAt: "desc" } } }
     });
   }
 
@@ -86,15 +87,11 @@ export default async function AdminPage() {
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors [color-scheme:dark]"
               />
             </div>
-            <div>
-              <label className="block text-sm text-gray-300 mb-1">URL del Logo (Opcional)</label>
-              <input
-                name="logoUrl"
-                type="url"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors"
-                placeholder="https://ejemplo.com/logo_evento.png"
-              />
-            </div>
+            <LogoUploader
+              name="logoUrl"
+              label="Logo del Evento (Opcional)"
+              placeholder="https://ejemplo.com/logo_evento.png"
+            />
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="block text-[10px] text-gray-300 mb-1">Registros</label>
@@ -153,13 +150,12 @@ export default async function AdminPage() {
         <div className="col-span-1 lg:col-span-2 space-y-4">
           <h2 className="text-xl font-semibold mb-4">Eventos Activos ({producer.events.length})</h2>
 
-          {producer.events.length === 0 ? (
-            <div className="glass-panel p-8 text-center text-gray-400 border-dashed">
-              Aún no has creado ningún evento.
+          {producer.events.length === 0 && (
+            <div className="glass-panel p-6 text-center text-gray-400 border-dashed text-sm">
+              Aún no has creado ningún evento regular.
             </div>
-          ) : (
-            <AdminEventList events={producer.events} producerId={producer.id} />
           )}
+          <AdminEventList events={producer.events} producerId={producer.id} />
         </div>
       </div>
     </div>

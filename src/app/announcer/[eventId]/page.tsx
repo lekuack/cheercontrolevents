@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import AnnouncerRealtime from "@/components/AnnouncerRealtime";
-import { updateScheduleStatus } from "@/app/admin/actions";
+import DemoStationSwitcher from "@/components/DemoStationSwitcher";
+import { updateScheduleStatus, toggleHitZeroAwarded } from "@/app/admin/actions";
 
 export default async function AnnouncerEventPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
@@ -21,6 +22,10 @@ export default async function AnnouncerEventPage({ params }: { params: Promise<{
   // Filtrar breaks del cronograma para el anunciador
   event.schedules = event.schedules.filter(s => s.type !== "BREAK" && s.team) as any;
 
+  // Equipos con Hit Zero pendientes de entregarse (no otorgados aún)
+  const hitZeroSchedules = event.schedules.filter(s => s.isHitZero && !s.hitZeroAwarded);
+  const pendingHitZero = hitZeroSchedules;
+
   // Equipo actualmente en pista
   const currentPerformance = event.schedules.find(s => s.status === "COMPETING");
 
@@ -39,6 +44,13 @@ export default async function AnnouncerEventPage({ params }: { params: Promise<{
 
   return (
     <div className="space-y-6">
+      {event.isDemo && (
+        <DemoStationSwitcher
+          eventId={event.id}
+          demoPin={event.demoPin || "1234"}
+          activeRole="ANNOUNCER"
+        />
+      )}
       {/* Cabecera del animador */}
       <div className="flex items-center gap-4">
         <Link href="/announcer" className="text-xl bg-white/10 w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20">
@@ -50,14 +62,71 @@ export default async function AnnouncerEventPage({ params }: { params: Promise<{
         </div>
       </div>
 
+      {/* Alerta de Reconocimientos Hit Zero Pendientes para el Animador */}
+      {hitZeroSchedules.length > 0 && (
+        <div className="glass-panel p-5 border-2 border-amber-400/60 bg-amber-500/10 rounded-2xl shadow-xl space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl animate-bounce">🎯</span>
+              <h3 className="font-black text-amber-300 text-lg uppercase tracking-wide">
+                Reconocimientos Hit Zero ({pendingHitZero.length} Pendiente{pendingHitZero.length === 1 ? "" : "s"})
+              </h3>
+            </div>
+            <span className="text-xs text-amber-200 font-bold bg-amber-400/20 px-3 py-1 rounded-full border border-amber-400/30">
+              Anunciar por Micrófono 🎤
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {hitZeroSchedules.map((schedule) => (
+              <div
+                key={schedule.id}
+                className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 ${
+                  schedule.hitZeroAwarded
+                    ? "bg-black/30 border-white/10 opacity-70"
+                    : "bg-amber-400/15 border-amber-400/50 shadow-lg animate-pulse"
+                }`}
+              >
+                <div className="min-w-0">
+                  <p className="font-black text-white text-base truncate">{schedule.team?.name}</p>
+                  <p className="text-xs text-amber-200 truncate">{schedule.team?.institution.name}</p>
+                  <p className="text-[10px] text-gray-400 font-mono mt-0.5">Orden #{schedule.orderIndex}</p>
+                </div>
+
+                {schedule.hitZeroAwarded ? (
+                  <span className="bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-lg border border-emerald-500/30 shrink-0">
+                    ✅ Otorgado
+                  </span>
+                ) : (
+                  <form action={async (formData: FormData) => {
+                    "use server";
+                    const id = formData.get("scheduleId") as string;
+                    await toggleHitZeroAwarded(id, true);
+                  }}>
+                    <input type="hidden" name="scheduleId" value={schedule.id} />
+                    <button
+                      type="submit"
+                      className="bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 border border-emerald-300/50 transition-all active:scale-95 cursor-pointer shrink-0 flex items-center gap-1.5"
+                    >
+                      <span>🏆</span>
+                      <span>Marcar Entregado</span>
+                    </button>
+                  </form>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Alerta Realtime de Luz Verde y Datos */}
       <AnnouncerRealtime 
         eventId={eventId} 
-        nextTeamName={nextPerformance?.team.name || null}
-        nextTeamInstitution={nextPerformance?.team.institution.name || null}
-        nextTeamCity={nextPerformance?.team.institution.city || null}
-        nextTeamCoach={nextPerformance?.team.coach || null}
-        nextTeamAthletes={nextPerformance?.team.athletesCount || null}
+        nextTeamName={nextPerformance?.team?.name || null}
+        nextTeamInstitution={nextPerformance?.team?.institution?.name || null}
+        nextTeamCity={nextPerformance?.team?.institution?.city || null}
+        nextTeamCoach={nextPerformance?.team?.coach || null}
+        nextTeamAthletes={nextPerformance?.team?.athletesCount || null}
         nextScheduleId={nextPerformance?.id || null}
         initialReady={event.judgesReady}
       />

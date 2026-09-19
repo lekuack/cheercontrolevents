@@ -134,12 +134,35 @@ export async function addBreakToSession(sessionId: string, eventId: string, titl
 }
 
 export async function removeScheduleItem(scheduleId: string) {
-  const item = await prisma.schedule.delete({
+  const item = await prisma.schedule.findUnique({
+    where: { id: scheduleId },
+    select: { eventSessionId: true },
+  });
+
+  if (!item) return;
+
+  await prisma.schedule.deleteMany({
     where: { id: scheduleId },
   });
+
   if (item.eventSessionId) {
     await triggerRecalculate(item.eventSessionId);
   }
+}
+
+export async function clearSessionSchedules(sessionId: string) {
+  const session = await prisma.eventSession.findUnique({
+    where: { id: sessionId },
+    select: { eventId: true },
+  });
+
+  if (!session) return;
+
+  await prisma.schedule.deleteMany({
+    where: { eventSessionId: sessionId },
+  });
+
+  revalidatePath(`/admin/events/${session.eventId}/sessions`);
 }
 
 export async function toggleExhibition(scheduleId: string, isExhibition: boolean) {
@@ -228,6 +251,135 @@ export async function autoSortSessionSchedules(sessionId: string) {
     )
   );
 
+  await triggerRecalculate(sessionId);
+}
+
+export async function moveDivisionInSession(
+  sessionId: string,
+  groupField: "division" | "category_division" | "full",
+  groupValue: string,
+  targetPosition: "START" | "END" | "BEFORE_ITEM" | "AFTER_ITEM",
+  targetScheduleId?: string
+) {
+  const session = await prisma.eventSession.findUnique({ where: { id: sessionId } });
+  if (!session) return;
+
+  const schedules = await prisma.schedule.findMany({
+    where: { eventSessionId: sessionId },
+    include: { team: true },
+    orderBy: { orderIndex: "asc" },
+  });
+
+  const getGroupKey = (s: (typeof schedules)[0]) => {
+    if (s.type !== "TEAM" || !s.team) return null;
+    if (groupField === "division") return s.team.division;
+    if (groupField === "category_division") return `${s.team.category || ""} • ${s.team.division}`;
+    return `${s.team.category || ""} • ${s.team.division} • ${s.team.level || ""}`;
+  };
+
+  const movingItems = schedules.filter((s) => getGroupKey(s) === groupValue);
+  const otherItems = schedules.filter((s) => getGroupKey(s) !== groupValue);
+
+  if (movingItems.length === 0) return;
+
+  let newList: typeof schedules = [];
+
+  if (targetPosition === "START") {
+    newList = [...movingItems, ...otherItems];
+  } else if (targetPosition === "END") {
+    newList = [...otherItems, ...movingItems];
+  } else if (targetScheduleId) {
+    const targetIdx = otherItems.findIndex((s) => s.id === targetScheduleId);
+    if (targetIdx === -1) {
+      newList = [...otherItems, ...movingItems];
+    } else {
+      const insertAt = targetPosition === "BEFORE_ITEM" ? targetIdx : targetIdx + 1;
+      newList = [
+        ...otherItems.slice(0, insertAt),
+        ...movingItems,
+        ...otherItems.slice(insertAt),
+      ];
+    }
+  } else {
+    newList = [...otherItems, ...movingItems];
+  }
+
+  await prisma.$transaction(
+    newList.map((item, index) =>
+      prisma.schedule.update({
+        where: { id: item.id },
+        data: { orderIndex: index },
+      })
+    )
+  );
+
+  await triggerRecalculate(sessionId);
+}
+
+export type ScheduleSnapshotItem = {
+  id: string;
+  type: string;
+  teamId: string | null;
+  breakTitle: string | null;
+  showBreakTitle: boolean;
+  breakDuration: number | null;
+  isExhibition: boolean;
+  orderIndex: number;
+};
+
+export async function restoreScheduleSnapshot(
+  sessionId: string,
+  snapshot: ScheduleSnapshotItem[]
+) {
+  const session = await prisma.eventSession.findUnique({ where: { id: sessionId } });
+  if (!session) return;
+
+  const eventId = session.eventId;
+  const snapshotIds = snapshot.map((s) => s.id);
+
+  // 1. Eliminar ítems que no estén en el snapshot
+  await prisma.schedule.deleteMany({
+    where: {
+      eventSessionId: sessionId,
+      id: { notIn: snapshotIds },
+    },
+  });
+
+  // 2. Crear o actualizar cada ítem del snapshot
+  for (const item of snapshot) {
+    const existing = await prisma.schedule.findUnique({ where: { id: item.id } });
+    if (existing) {
+      await prisma.schedule.update({
+        where: { id: item.id },
+        data: {
+          type: item.type,
+          teamId: item.teamId,
+          breakTitle: item.breakTitle,
+          showBreakTitle: item.showBreakTitle,
+          breakDuration: item.breakDuration,
+          isExhibition: item.isExhibition,
+          orderIndex: item.orderIndex,
+        },
+      });
+    } else {
+      await prisma.schedule.create({
+        data: {
+          id: item.id,
+          eventId,
+          eventSessionId: sessionId,
+          type: item.type,
+          teamId: item.teamId,
+          breakTitle: item.breakTitle,
+          showBreakTitle: item.showBreakTitle,
+          breakDuration: item.breakDuration,
+          isExhibition: item.isExhibition,
+          orderIndex: item.orderIndex,
+        },
+      });
+    }
+  }
+
+  // 3. Recalcular horarios
   await triggerRecalculate(sessionId);
 }
 

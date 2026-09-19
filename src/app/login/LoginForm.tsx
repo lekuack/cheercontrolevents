@@ -43,17 +43,18 @@ export default function LoginForm() {
       const role = res.role;
       const userId = res.userId;
 
+      let targetUrl = "/";
       if (role === "SUPER_ADMIN" || role === "PRODUCER_ADMIN") {
-        router.push("/admin");
+        targetUrl = "/admin";
       } else if (role === "STAFF") {
-        router.push(`/staff?userId=${userId}`);
+        targetUrl = `/staff?userId=${userId}`;
       } else if (role === "JUDGE") {
-        router.push(`/judge?userId=${userId}`);
+        targetUrl = `/judge?userId=${userId}`;
       } else if (role === "ANNOUNCER") {
-        router.push(`/announcer?userId=${userId}`);
-      } else {
-        router.push("/");
+        targetUrl = `/announcer?userId=${userId}`;
       }
+
+      window.location.href = targetUrl;
     } catch {
       setError("Ocurrió un error inesperado al intentar iniciar sesión.");
       setLoading(false);

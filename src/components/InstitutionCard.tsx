@@ -10,6 +10,7 @@ import {
   moveTeamToInstitution,
 } from "@/app/admin/actions";
 import { CHEER_CONFIG, INSTITUTION_TYPES, InstitutionType } from "@/lib/cheerConfig";
+import LogoUploader from "./LogoUploader";
 
 interface Team {
   id: string;
@@ -97,15 +98,21 @@ export default function InstitutionCard({ institution, allInstitutions }: Props)
     setTeamPhone(t.coachPhone || "");
   };
 
-  const handleSaveInst = async () => {
-    const fd = new FormData();
-    fd.append("id", institution.id);
-    fd.append("name", instName);
-    fd.append("city", instCity);
-    fd.append("logoUrl", instLogo);
-    fd.append("headCoach", instHeadCoach);
-    fd.append("headCoachPhone", instHeadPhone);
-    fd.append("type", instTypeState);
+  const handleSaveInst = async (e?: React.FormEvent<HTMLFormElement>) => {
+    if (e) e.preventDefault();
+    const formElement = e?.currentTarget;
+    const fd = formElement ? new FormData(formElement) : new FormData();
+    if (!formElement) {
+      fd.append("id", institution.id);
+      fd.append("name", instName);
+      fd.append("city", instCity);
+      fd.append("logoUrl", instLogo);
+      fd.append("headCoach", instHeadCoach);
+      fd.append("headCoachPhone", instHeadPhone);
+      fd.append("type", instTypeState);
+    } else {
+      fd.append("id", institution.id);
+    }
     await updateInstitution(fd);
     setEditingInst(false);
   };
@@ -257,47 +264,49 @@ export default function InstitutionCard({ institution, allInstitutions }: Props)
 
       {/* Formulario edición institución */}
       {editingInst && (
-        <div className="border-t border-white/10 bg-black/30 p-4 space-y-3">
+        <form onSubmit={handleSaveInst} className="border-t border-white/10 bg-black/30 p-4 space-y-3">
           <div className="text-[10px] text-warning font-extrabold uppercase tracking-widest mb-2">✏️ Editar Club</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div>
               <label className="text-[10px] text-gray-400 block mb-1">Nombre del Club *</label>
-              <input value={instName} onChange={e => setInstName(e.target.value)}
+              <input name="name" value={instName} onChange={e => setInstName(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
             </div>
             <div>
               <label className="text-[10px] text-gray-400 block mb-1">Tipo de Club / Institución *</label>
-              <select value={instTypeState} onChange={e => setInstTypeState(e.target.value as InstitutionType)}
+              <select name="type" value={instTypeState} onChange={e => setInstTypeState(e.target.value as InstitutionType)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary">
                 {INSTITUTION_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <div>
               <label className="text-[10px] text-gray-400 block mb-1">Ciudad</label>
-              <input value={instCity} onChange={e => setInstCity(e.target.value)} placeholder="Ej. Santiago"
+              <input name="city" value={instCity} onChange={e => setInstCity(e.target.value)} placeholder="Ej. Santiago"
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
             </div>
-            <div>
-              <label className="text-[10px] text-gray-400 block mb-1">URL Logo</label>
-              <input value={instLogo} onChange={e => setInstLogo(e.target.value)} placeholder="https://..."
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary" />
+            <div className="sm:col-span-2 lg:col-span-3">
+              <LogoUploader
+                name="logoUrl"
+                defaultValue={instLogo}
+                label="Logo del Club / Institución"
+              />
             </div>
             <div>
               <label className="text-[10px] text-yellow-400 block mb-1">👑 Head Coach / Encargado</label>
-              <input value={instHeadCoach} onChange={e => setInstHeadCoach(e.target.value)} placeholder="Nombre del encargado"
+              <input name="headCoach" value={instHeadCoach} onChange={e => setInstHeadCoach(e.target.value)} placeholder="Nombre del encargado"
                 className="w-full bg-white/5 border border-yellow-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500" />
             </div>
             <div>
               <label className="text-[10px] text-yellow-400 block mb-1">📞 Teléfono Encargado <span className="text-gray-500">(fallback)</span></label>
-              <input value={instHeadPhone} onChange={e => setInstHeadPhone(e.target.value)} placeholder="+56912345678"
+              <input name="headCoachPhone" value={instHeadPhone} onChange={e => setInstHeadPhone(e.target.value)} placeholder="+56912345678"
                 className="w-full bg-white/5 border border-yellow-500/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-yellow-500" />
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleSaveInst} className="flex-1 bg-gradient-to-r from-primary to-purple-600 text-white text-xs font-bold py-2 rounded-lg active:scale-95 transition-all">💾 Guardar</button>
-            <button onClick={() => setEditingInst(false)} className="bg-white/5 hover:bg-white/10 text-gray-300 text-xs px-4 py-2 rounded-lg">Cancelar</button>
+            <button type="submit" className="flex-1 bg-gradient-to-r from-primary to-purple-600 text-white text-xs font-bold py-2 rounded-lg active:scale-95 transition-all">💾 Guardar</button>
+            <button type="button" onClick={() => setEditingInst(false)} className="bg-white/5 hover:bg-white/10 text-gray-300 text-xs px-4 py-2 rounded-lg">Cancelar</button>
           </div>
-        </div>
+        </form>
       )}
 
       {/* Lista de equipos */}

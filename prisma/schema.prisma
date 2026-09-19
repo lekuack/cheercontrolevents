@@ -48,6 +48,8 @@ model Event {
   date        DateTime
   logoUrl     String?
   judgesReady Boolean    @default(false)
+  isDemo      Boolean    @default(false)
+  demoPin     String?
   
   // Configuración de zonas del evento
   warmupZonesCount      Int     @default(1)
@@ -206,6 +208,11 @@ model Schedule {
   registrationZone String @default("A") // Mesa de registro (A, B, C...)
   warmupZone       String @default("A") // Zona de calentamiento (A, B, C...)
   springfloorZone  String @default("A") // Tapete Springfloor (A, B, C...)
+
+  // Reconocimiento Hit Zero
+  isHitZero        Boolean   @default(false)
+  hitZeroAwarded   Boolean   @default(false)
+  hitZeroAwardedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

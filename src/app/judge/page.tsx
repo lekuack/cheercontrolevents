@@ -1,13 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { getSessionUser } from "@/app/admin/actions";
 
-export default async function JudgeEventsPage({
-  searchParams
-}: {
-  searchParams: Promise<{ userId?: string }>
-}) {
-  const { userId } = await searchParams;
+export default async function JudgeEventsPage() {
+  const user = await getSessionUser();
+
+  const whereCondition = user?.producerId && user.role !== "SUPER_ADMIN"
+    ? { producerId: user.producerId }
+    : {};
+
   const events = await prisma.event.findMany({
+    where: whereCondition,
     orderBy: { date: "asc" }
   });
 
@@ -27,7 +30,7 @@ export default async function JudgeEventsPage({
           {events.map(event => (
             <Link 
               key={event.id} 
-              href={{ pathname: `/judge/${event.id}`, query: userId ? { userId } : {} }} 
+              href={`/judge/${event.id}`} 
               className="block"
             >
               <div className="glass-panel p-5 flex items-center gap-6 hover:bg-white/5 border border-white/10 hover:border-primary/50 transition-all rounded-xl">

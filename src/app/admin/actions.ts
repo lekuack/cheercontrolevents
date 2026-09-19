@@ -136,13 +136,13 @@ export async function updateScheduleStatus(formData: FormData) {
   const now = new Date();
   let delayMinutes = 0;
 
-  if (newStatus === "WARMING_UP") {
+  if (newStatus === "WARMING_UP" && currentSchedule.scheduledWarmup1) {
     const diffMs = now.getTime() - new Date(currentSchedule.scheduledWarmup1).getTime();
     delayMinutes = Math.floor(diffMs / 60000);
-  } else if (newStatus === "WARMING_UP_SPRINGFLOOR") {
+  } else if (newStatus === "WARMING_UP_SPRINGFLOOR" && currentSchedule.scheduledSpringfloor) {
     const diffMs = now.getTime() - new Date(currentSchedule.scheduledSpringfloor).getTime();
     delayMinutes = Math.floor(diffMs / 60000);
-  } else if (newStatus === "COMPETING") {
+  } else if (newStatus === "COMPETING" && currentSchedule.scheduledPerformance) {
     const diffMs = now.getTime() - new Date(currentSchedule.scheduledPerformance).getTime();
     delayMinutes = Math.floor(diffMs / 60000);
   }
@@ -154,10 +154,16 @@ export async function updateScheduleStatus(formData: FormData) {
     // A. Desplazar los horarios restantes del equipo actual
     const currentUpdates: any = {};
     if (newStatus === "WARMING_UP") {
-      currentUpdates.scheduledSpringfloor = new Date(new Date(currentSchedule.scheduledSpringfloor).getTime() + delayMinutes * 60000);
-      currentUpdates.scheduledPerformance = new Date(new Date(currentSchedule.scheduledPerformance).getTime() + delayMinutes * 60000);
+      if (currentSchedule.scheduledSpringfloor) {
+        currentUpdates.scheduledSpringfloor = new Date(new Date(currentSchedule.scheduledSpringfloor).getTime() + delayMinutes * 60000);
+      }
+      if (currentSchedule.scheduledPerformance) {
+        currentUpdates.scheduledPerformance = new Date(new Date(currentSchedule.scheduledPerformance).getTime() + delayMinutes * 60000);
+      }
     } else if (newStatus === "WARMING_UP_SPRINGFLOOR") {
-      currentUpdates.scheduledPerformance = new Date(new Date(currentSchedule.scheduledPerformance).getTime() + delayMinutes * 60000);
+      if (currentSchedule.scheduledPerformance) {
+        currentUpdates.scheduledPerformance = new Date(new Date(currentSchedule.scheduledPerformance).getTime() + delayMinutes * 60000);
+      }
     }
 
     if (Object.keys(currentUpdates).length > 0) {
@@ -177,15 +183,18 @@ export async function updateScheduleStatus(formData: FormData) {
     });
 
     for (const fs of futureSchedules) {
-      await prisma.schedule.update({
-        where: { id: fs.id },
-        data: {
-          scheduledRegistration: new Date(new Date(fs.scheduledRegistration).getTime() + delayMinutes * 60000),
-          scheduledWarmup1: new Date(new Date(fs.scheduledWarmup1).getTime() + delayMinutes * 60000),
-          scheduledSpringfloor: new Date(new Date(fs.scheduledSpringfloor).getTime() + delayMinutes * 60000),
-          scheduledPerformance: new Date(new Date(fs.scheduledPerformance).getTime() + delayMinutes * 60000),
-        }
-      });
+      const fsUpdates: any = {};
+      if (fs.scheduledRegistration) fsUpdates.scheduledRegistration = new Date(new Date(fs.scheduledRegistration).getTime() + delayMinutes * 60000);
+      if (fs.scheduledWarmup1) fsUpdates.scheduledWarmup1 = new Date(new Date(fs.scheduledWarmup1).getTime() + delayMinutes * 60000);
+      if (fs.scheduledSpringfloor) fsUpdates.scheduledSpringfloor = new Date(new Date(fs.scheduledSpringfloor).getTime() + delayMinutes * 60000);
+      if (fs.scheduledPerformance) fsUpdates.scheduledPerformance = new Date(new Date(fs.scheduledPerformance).getTime() + delayMinutes * 60000);
+
+      if (Object.keys(fsUpdates).length > 0) {
+        await prisma.schedule.update({
+          where: { id: fs.id },
+          data: fsUpdates
+        });
+      }
     }
     console.log(`[CASCADA] Se re-programaron ${futureSchedules.length} presentaciones futuras desplazadas por ${delayMinutes} min.`);
   }
@@ -224,6 +233,18 @@ export async function updateScheduleStatus(formData: FormData) {
 }
 
 export async function setJudgesReadyStatus(eventId: string, ready: boolean) {
+  const user = await getSessionUser();
+  const isAllowed =
+    user &&
+    (user.role === "JUDGE" ||
+      user.role === "SUPER_ADMIN" ||
+      user.role === "PRODUCER_ADMIN" ||
+      user.isSupervisor);
+
+  if (!isAllowed) {
+    throw new Error("No tienes permisos para modificar el estado de la mesa de jueces.");
+  }
+
   await prisma.event.update({
     where: { id: eventId },
     data: { judgesReady: ready }
@@ -759,6 +780,9 @@ export async function loginUser(email: string, password?: string) {
     }
     const cookieStore = await cookies();
     cookieStore.set("userId", user.id, { maxAge: 60 * 60 * 24 * 30, path: "/", httpOnly: true });
+    if (user.producerId) {
+      cookieStore.set("activeProducerId", user.producerId, { maxAge: 60 * 60 * 24 * 30, path: "/" });
+    }
     return { success: true, userId: user.id, role: user.role };
   }
 
@@ -771,6 +795,9 @@ export async function loginUser(email: string, password?: string) {
   if (user.allowPasswordless) {
     const cookieStore = await cookies();
     cookieStore.set("userId", user.id, { maxAge: 60 * 60 * 24 * 7, path: "/", httpOnly: true });
+    if (user.producerId) {
+      cookieStore.set("activeProducerId", user.producerId, { maxAge: 60 * 60 * 24 * 7, path: "/" });
+    }
     return { success: true, userId: user.id, role: user.role };
   }
 
@@ -789,6 +816,9 @@ export async function loginUser(email: string, password?: string) {
 
   const cookieStore = await cookies();
   cookieStore.set("userId", user.id, { maxAge: 60 * 60 * 24 * 7, path: "/", httpOnly: true });
+  if (user.producerId) {
+    cookieStore.set("activeProducerId", user.producerId, { maxAge: 60 * 60 * 24 * 7, path: "/" });
+  }
 
   return {
     success: true,
@@ -816,6 +846,7 @@ export async function getSessionUser() {
 export async function logoutUser() {
   const cookieStore = await cookies();
   cookieStore.delete("userId");
+  cookieStore.delete("activeProducerId");
 }
 
 export async function loginUserByProducer(email: string, password: string | undefined, producerId: string) {
@@ -833,6 +864,22 @@ export async function loginUserByProducer(email: string, password: string | unde
     return { error: "No se encontró una cuenta con ese correo en esta producción." };
   }
 
+  const isAdmin = user.role === "SUPER_ADMIN" || user.role === "PRODUCER_ADMIN";
+
+  // Admins y Superadmins: solo requieren contraseña, no dependen de isActive
+  if (isAdmin) {
+    if (!user.password) {
+      return { error: "Esta cuenta no tiene contraseña configurada. Contacta al Super Admin." };
+    }
+    if (user.password !== password?.trim()) {
+      return { error: "Contraseña incorrecta." };
+    }
+    const cookieStore = await cookies();
+    cookieStore.set("userId", user.id, { maxAge: 60 * 60 * 24 * 30, path: "/", httpOnly: true });
+    cookieStore.set("activeProducerId", producerId, { maxAge: 60 * 60 * 24 * 30, path: "/" });
+    return { success: true, userId: user.id, role: user.role };
+  }
+
   // Cuentas operativas: requieren isActive
   if (!user.isActive && !user.allowPasswordless) {
     return { error: "Tu cuenta está inactiva. Solicita activación al productor." };
@@ -842,6 +889,7 @@ export async function loginUserByProducer(email: string, password: string | unde
   if (user.allowPasswordless) {
     const cookieStore = await cookies();
     cookieStore.set("userId", user.id, { maxAge: 60 * 60 * 24 * 7, path: "/", httpOnly: true });
+    cookieStore.set("activeProducerId", producerId, { maxAge: 60 * 60 * 24 * 7, path: "/" });
     return { success: true, userId: user.id, role: user.role };
   }
 
@@ -860,6 +908,7 @@ export async function loginUserByProducer(email: string, password: string | unde
 
   const cookieStore = await cookies();
   cookieStore.set("userId", user.id, { maxAge: 60 * 60 * 24 * 7, path: "/", httpOnly: true });
+  cookieStore.set("activeProducerId", producerId, { maxAge: 60 * 60 * 24 * 7, path: "/" });
   return { success: true, userId: user.id, role: user.role };
 }
 
@@ -964,4 +1013,286 @@ export async function updateUserProducerAssignment(formData: FormData) {
   if (producerId) {
     revalidatePath(`/superadmin/producer/${producerId}`);
   }
+}
+
+export async function createDemoEvent(producerId: string, name?: string, customPin?: string) {
+  try {
+    if (!producerId) {
+      return { error: "No se encontró la productora activa." };
+    }
+
+    const pin = customPin?.trim() || Math.floor(1000 + Math.random() * 9000).toString();
+    const eventName = name?.trim() || "🏟️ Evento de Capacitación & Demo";
+
+    const event = await prisma.event.create({
+      data: {
+        name: eventName,
+        date: new Date(),
+        producerId,
+        isDemo: true,
+        demoPin: pin,
+        registrationZonesCount: 1,
+        warmupZonesCount: 1,
+        springfloorZonesCount: 1
+      }
+    });
+
+    await resetDemoEvent(event.id);
+    revalidatePath("/admin");
+    return { success: true, eventId: event.id, pin };
+  } catch (err: any) {
+    console.error("Error creating demo event:", err);
+    return { error: err?.message || "Error al crear el evento de capacitación." };
+  }
+}
+
+export async function updateDemoPin(eventId: string, newPin: string) {
+  if (!newPin || newPin.trim().length !== 4) {
+    return { error: "El PIN debe tener exactamente 4 dígitos." };
+  }
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { demoPin: newPin.trim() }
+  });
+
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+export async function resetDemoEvent(eventId: string) {
+  const event = await prisma.event.findUnique({
+    where: { id: eventId }
+  });
+
+  if (!event) return { error: "Evento no encontrado." };
+
+  // Eliminar cronogramas y equipos previos del evento demo
+  await prisma.schedule.deleteMany({
+    where: { eventId }
+  });
+
+  // Institución Demo
+  let institution = await prisma.institution.findFirst({
+    where: { producerId: event.producerId, name: "Academia Demo All-Stars" }
+  });
+
+  if (!institution) {
+    institution = await prisma.institution.create({
+      data: {
+        name: "Academia Demo All-Stars",
+        city: "Santiago",
+        producerId: event.producerId,
+        type: "All Star"
+      }
+    });
+  }
+
+  const demoTeamsData = [
+    { name: "Titans Alpha", division: "Coed", category: "Elite", level: "Nivel 4", coach: "Camila Rivas", phone: "+56912345678" },
+    { name: "Golden Stars", division: "All Girl", category: "Junior", level: "Nivel 2", coach: "Matías Soto", phone: "+56987654321" },
+    { name: "Thunder Voltage", division: "Coed", category: "Senior", level: "Nivel 3", coach: "Sofía Vergara", phone: "+56955554444" },
+    { name: "Bravos All Stars", division: "Open", category: "International", level: "Nivel 5", coach: "Claudio Fuentes", phone: "+56999998888" },
+    { name: "Vipers Cheer Club", division: "All Girl", category: "Youth", level: "Nivel 1", coach: "Daniela Morales", phone: "+56944443333" },
+    { name: "Rebels Dynamite", division: "Coed", category: "Senior", level: "Nivel 4", coach: "Ignacio Pérez", phone: "+56977776666" },
+    { name: "Phoenix Rising", division: "All Girl", category: "Junior", level: "Nivel 3", coach: "Valentina Gómez", phone: "+56922221111" },
+    { name: "Inferno Fire", division: "Coed", category: "Open", level: "Nivel 6", coach: "Gabriel Silva", phone: "+56933332222" },
+    { name: "Eagles Flight", division: "All Girl", category: "Mini", level: "Nivel 1", coach: "Carolina Torres", phone: "+56966665555" },
+    { name: "Dragons Power", division: "Coed", category: "Senior", level: "Nivel 4", coach: "Felipe Araya", phone: "+56988887777" },
+    { name: "Stormbreakers", division: "Open", category: "Premier", level: "Nivel 5", coach: "Andrea Godoy", phone: "+56911119999" },
+    { name: "Shadow Stealth", division: "All Girl", category: "Junior", level: "Nivel 2", coach: "Rodrigo Castro", phone: "+56944445555" },
+    { name: "Apex Legends", division: "Coed", category: "Senior", level: "Nivel 4", coach: "Francisca Vera", phone: "+56977778888" },
+    { name: "Galaxy Quantum", division: "All Girl", category: "Youth", level: "Nivel 1", coach: "Hernán Bravo", phone: "+56922223333" },
+    { name: "Tigers Rampage", division: "Coed", category: "Junior", level: "Nivel 3", coach: "Marcela Reyes", phone: "+56955556666" },
+    { name: "Valkyries Shield", division: "All Girl", category: "Senior", level: "Nivel 4", coach: "Sebastián Lagos", phone: "+56988889999" }
+  ];
+
+  // La fecha/hora de inicio arranca 10 minutos en el futuro a partir de este instante
+  const baseTime = new Date(Date.now() + 10 * 60 * 1000);
+
+  for (let i = 0; i < demoTeamsData.length; i++) {
+    const tData = demoTeamsData[i];
+
+    let team = await prisma.team.findFirst({
+      where: { institutionId: institution.id, name: tData.name }
+    });
+
+    if (!team) {
+      team = await prisma.team.create({
+        data: {
+          name: tData.name,
+          division: tData.division,
+          category: tData.category,
+          level: tData.level,
+          athletesCount: 16 + (i % 6),
+          coach: tData.coach,
+          coachPhone: tData.phone,
+          institutionId: institution.id
+        }
+      });
+    }
+
+    // Tiempos programados con 10 minutos de intervalo por equipo y entre estaciones
+    const scheduledRegistration = new Date(baseTime.getTime() + i * 10 * 60000);
+    const scheduledWarmup1 = new Date(scheduledRegistration.getTime() + 10 * 60000);
+    const scheduledSpringfloor = new Date(scheduledWarmup1.getTime() + 10 * 60000);
+    const scheduledPerformance = new Date(scheduledSpringfloor.getTime() + 10 * 60000);
+
+    await prisma.schedule.create({
+      data: {
+        eventId,
+        teamId: team.id,
+        orderIndex: i + 1,
+        scheduledRegistration,
+        scheduledWarmup1,
+        scheduledSpringfloor,
+        scheduledPerformance,
+        status: "PENDING",
+        registrationZone: "A",
+        warmupZone: "A",
+        springfloorZone: "A"
+      }
+    });
+  }
+
+  // Reiniciar estado de mesa de jueces
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { judgesReady: false, date: baseTime }
+  });
+
+  // Notificar por WebSocket para sincronizar a todos los clientes en tiempo real
+  const io = (global as any).io;
+  if (io) {
+    io.to(eventId).emit("status-changed", { eventId });
+  }
+
+  revalidatePath("/admin");
+  revalidatePath(`/judge/${eventId}`);
+  revalidatePath(`/staff/${eventId}`);
+  revalidatePath(`/announcer/${eventId}`);
+
+  return { success: true, startTime: baseTime };
+}
+
+export async function loginDemoPin(pin: string, role: string, station?: string, isSupervisor?: boolean) {
+  if (!pin || pin.trim().length !== 4) {
+    return { error: "Por favor ingresa un PIN válido de 4 dígitos." };
+  }
+
+  const cleanPin = pin.trim();
+
+  // Buscar evento demo que coincida con el PIN
+  const event = await prisma.event.findFirst({
+    where: {
+      isDemo: true,
+      demoPin: cleanPin
+    }
+  });
+
+  if (!event) {
+    return { error: "PIN incorrecto o no se encontró ningún evento de prueba activo con ese PIN." };
+  }
+
+  // Crear o reutilizar usuario demo operativo para el rol seleccionado
+  const roleName = isSupervisor ? "SUPERVISOR" : (station ? `STAFF_${station}` : role);
+  const email = `demo_${roleName.toLowerCase()}_${event.producerId}@cheercontrol.test`;
+
+  const effectiveStation = station === "WARMUP_1" ? "WARMUP_1_A,WARMUP_1" :
+                           station === "SPRINGFLOOR" ? "SPRINGFLOOR_A,SPRINGFLOOR" :
+                           station === "REGISTRATION" ? "REGISTRATION_A,REGISTRATION" : station;
+
+  let user = await prisma.user.findFirst({
+    where: { email }
+  });
+
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        name: `Capacitación: ${roleName}`,
+        email,
+        role: role === "SUPERVISOR" ? "STAFF" : role,
+        station: effectiveStation || null,
+        isSupervisor: isSupervisor || role === "SUPERVISOR",
+        producerId: event.producerId,
+        isActive: true,
+        allowPasswordless: true
+      }
+    });
+  } else {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        role: role === "SUPERVISOR" ? "STAFF" : role,
+        station: effectiveStation || null,
+        isSupervisor: isSupervisor || role === "SUPERVISOR",
+        isActive: true,
+        allowPasswordless: true
+      }
+    });
+  }
+
+  // Guardar cookies de sesión
+  const cookieStore = await cookies();
+  cookieStore.set("userId", user.id, { maxAge: 60 * 60 * 24 * 7, path: "/", httpOnly: true });
+  cookieStore.set("activeProducerId", event.producerId, { maxAge: 60 * 60 * 24 * 7, path: "/" });
+
+  let targetUrl = `/staff/${event.id}?userId=${user.id}`;
+  if (role === "SCREEN") {
+    targetUrl = `/tv/${event.id}`;
+  } else if (role === "PUBLIC_WEB") {
+    const producer = await prisma.producer.findUnique({ where: { id: event.producerId } });
+    const subdomain = producer?.subdomain || "demo";
+    targetUrl = `/p/${subdomain}/${event.id}`;
+  } else if (role === "JUDGE") {
+    targetUrl = `/judge/${event.id}?userId=${user.id}`;
+  } else if (role === "ANNOUNCER") {
+    targetUrl = `/announcer/${event.id}?userId=${user.id}`;
+  } else if (effectiveStation) {
+    targetUrl = `/staff/${event.id}?userId=${user.id}&station=${effectiveStation.split(",")[0]}`;
+  }
+
+  return { success: true, targetUrl, eventId: event.id, eventName: event.name };
+}
+
+export async function toggleHitZero(scheduleId: string, isHitZero: boolean) {
+  const schedule = await prisma.schedule.update({
+    where: { id: scheduleId },
+    data: {
+      isHitZero,
+      hitZeroAwarded: isHitZero ? false : false
+    }
+  });
+
+  const io = (global as any).io;
+  if (io) {
+    io.to(schedule.eventId).emit("status-changed", { eventId: schedule.eventId });
+    io.to(schedule.eventId).emit("hit-zero-updated", { scheduleId, isHitZero });
+  }
+
+  revalidatePath(`/judge/${schedule.eventId}`);
+  revalidatePath(`/staff/${schedule.eventId}`);
+  revalidatePath(`/announcer/${schedule.eventId}`);
+  return { success: true, isHitZero };
+}
+
+export async function toggleHitZeroAwarded(scheduleId: string, awarded: boolean) {
+  const schedule = await prisma.schedule.update({
+    where: { id: scheduleId },
+    data: {
+      hitZeroAwarded: awarded,
+      hitZeroAwardedAt: awarded ? new Date() : null
+    }
+  });
+
+  const io = (global as any).io;
+  if (io) {
+    io.to(schedule.eventId).emit("status-changed", { eventId: schedule.eventId });
+    io.to(schedule.eventId).emit("hit-zero-updated", { scheduleId, hitZeroAwarded: awarded });
+  }
+
+  revalidatePath(`/judge/${schedule.eventId}`);
+  revalidatePath(`/staff/${schedule.eventId}`);
+  revalidatePath(`/announcer/${schedule.eventId}`);
+  return { success: true, hitZeroAwarded: awarded };
 }

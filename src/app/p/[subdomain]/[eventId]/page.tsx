@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PublicEventTabs from "@/components/PublicEventTabs";
+import DemoStationSwitcher from "@/components/DemoStationSwitcher";
 
 interface Props {
   params: Promise<{ subdomain: string; eventId: string }>;
@@ -51,6 +52,14 @@ export default async function ProducerEventPage({ params }: Props) {
         fontFamily: event.fontFamily || "Inter"
       }}
     >
+      {/* Switcher de Puesto para Capacitaciones / Demos */}
+      {event.isDemo && (
+        <DemoStationSwitcher
+          eventId={event.id}
+          demoPin={event.demoPin || "1234"}
+          activeRole="PUBLIC_WEB"
+        />
+      )}
       {/* Header */}
       <header className="border-b border-white/5 bg-black/30 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -84,11 +93,13 @@ export default async function ProducerEventPage({ params }: Props) {
         {/* Hero del Evento */}
         <section className="flex flex-col sm:flex-row gap-5 items-start">
           {event.logoUrl ? (
-            <img
-              src={event.logoUrl}
-              alt={event.name}
-              className="w-24 h-24 rounded-2xl object-cover border border-white/10 shadow-2xl flex-shrink-0"
-            />
+            <div className="w-24 h-24 rounded-2xl bg-black/40 border border-white/10 shadow-2xl flex-shrink-0 flex items-center justify-center p-2 overflow-hidden">
+              <img
+                src={event.logoUrl}
+                alt={event.name}
+                className="max-w-full max-h-full object-contain rounded-xl"
+              />
+            </div>
           ) : (
             <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/30 to-violet-700/30 border border-primary/20 flex items-center justify-center text-4xl flex-shrink-0">
               🏆

@@ -1,8 +1,23 @@
 import { ReactNode } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSessionUser } from "@/app/admin/actions";
 import LogoutButton from "@/components/LogoutButton";
 
-export default function JudgeLayout({ children }: { children: ReactNode }) {
+export default async function JudgeLayout({ children }: { children: ReactNode }) {
+  const user = await getSessionUser();
+
+  const isAllowedRole =
+    user &&
+    (user.role === "JUDGE" ||
+      user.role === "SUPER_ADMIN" ||
+      user.role === "PRODUCER_ADMIN" ||
+      user.isSupervisor);
+
+  if (!isAllowedRole) {
+    redirect("/login");
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0f172a] text-white">
       {/* Tablet-optimized Header */}
@@ -11,7 +26,9 @@ export default function JudgeLayout({ children }: { children: ReactNode }) {
           <span className="text-3xl">⚖️</span>
           <div>
             <h1 className="font-bold text-xl text-white">Panel de Jueces</h1>
-            <p className="text-xs text-primary">Evaluación y Control del Evento</p>
+            <p className="text-xs text-primary">
+              Juez: <span className="font-bold text-white">{user.name}</span> ({user.email})
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -32,3 +49,4 @@ export default function JudgeLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
