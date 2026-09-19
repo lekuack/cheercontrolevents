@@ -3,6 +3,7 @@ import Link from "next/link";
 
 export default async function Home() {
   const producers = await prisma.producer.findMany({
+    where: { isActive: true },
     orderBy: { name: "asc" },
     include: {
       _count: { select: { events: true } }
