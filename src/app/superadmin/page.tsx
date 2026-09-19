@@ -166,7 +166,7 @@ export default async function SuperAdminPage() {
                       const fd = new FormData();
                       fd.append("producerId", producer.id);
                       await deleteProducer(fd);
-                    }} onSubmit="return confirm('¿Seguro que deseas eliminar este productor y todos sus datos?')">
+                    }} >
                       <button 
                         type="submit" 
                         title="Eliminar"
