@@ -92,27 +92,24 @@ export default function LogoUploader({
           <button
             type="button"
             onClick={() => setMode("file")}
-            className={`px-2 py-0.5 rounded-md transition-all font-semibold cursor-pointer ${
-              mode === "file" ? "bg-primary text-white shadow" : "text-gray-400 hover:text-white"
-            }`}
+            className={`px-2 py-0.5 rounded-md transition-all font-semibold cursor-pointer ${mode === "file" ? "bg-primary text-white shadow" : "text-gray-400 hover:text-white"
+              }`}
           >
             📁 Archivo
           </button>
           <button
             type="button"
             onClick={() => setMode("url")}
-            className={`px-2 py-0.5 rounded-md transition-all font-semibold cursor-pointer ${
-              mode === "url" ? "bg-primary text-white shadow" : "text-gray-400 hover:text-white"
-            }`}
+            className={`px-2 py-0.5 rounded-md transition-all font-semibold cursor-pointer ${mode === "url" ? "bg-primary text-white shadow" : "text-gray-400 hover:text-white"
+              }`}
           >
             🔗 URL
           </button>
           <button
             type="button"
             onClick={() => setMode("gallery")}
-            className={`px-2 py-0.5 rounded-md transition-all font-semibold cursor-pointer ${
-              mode === "gallery" ? "bg-primary text-white shadow" : "text-gray-400 hover:text-white"
-            }`}
+            className={`px-2 py-0.5 rounded-md transition-all font-semibold cursor-pointer ${mode === "gallery" ? "bg-primary text-white shadow" : "text-gray-400 hover:text-white"
+              }`}
           >
             🖼️ Galería
           </button>
@@ -150,11 +147,10 @@ export default function LogoUploader({
           onDragLeave={handleDrag}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
-            dragActive
+          className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${dragActive
               ? "border-primary bg-primary/10 scale-[1.01]"
               : "border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/30"
-          }`}
+            }`}
         >
           <input
             ref={fileInputRef}
@@ -206,9 +202,8 @@ export default function LogoUploader({
                   key={idx}
                   type="button"
                   onClick={() => setValue(logo)}
-                  className={`relative aspect-square rounded-lg border-2 overflow-hidden bg-black/50 hover:border-primary/50 transition-all ${
-                    value === logo ? "border-primary shadow-lg shadow-primary/20 scale-105" : "border-white/5"
-                  }`}
+                  className={`relative aspect-square rounded-lg border-2 overflow-hidden bg-black/50 hover:border-primary/50 transition-all ${value === logo ? "border-primary shadow-lg shadow-primary/20 scale-105" : "border-white/5"
+                    }`}
                 >
                   <img src={logo} alt="Logo de galería" className="w-full h-full object-contain p-1" />
                   {value === logo && (
