@@ -200,7 +200,7 @@ export default function LogoUploader({
           ) : galleryLogos.length === 0 ? (
             <div className="text-center text-xs text-gray-400 py-4">No hay logos guardados previamente.</div>
           ) : (
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+            <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2">
               {galleryLogos.map((logo, idx) => (
                 <button
                   key={idx}
