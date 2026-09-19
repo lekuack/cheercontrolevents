@@ -967,9 +967,27 @@ export async function updateProducer(formData: FormData) {
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
   const subdomain = formData.get("subdomain") as string;
-  const logoUrl = formData.get("logoUrl") as string;
+  const logoFile = formData.get("logoFile") as File;
+  let logoUrl = formData.get("logoUrl") as string;
 
   if (!id || !name || !subdomain) return;
+
+  if (logoFile && logoFile.size > 0) {
+    const fs = await import("fs/promises");
+    const path = await import("path");
+    
+    const bytes = await logoFile.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    
+    const fileName = `${Date.now()}-${logoFile.name.replace(/\s+/g, '-')}`;
+    const uploadDir = path.join(process.cwd(), "public/uploads/producers");
+    
+    await fs.mkdir(uploadDir, { recursive: true });
+    const filePath = path.join(uploadDir, fileName);
+    await fs.writeFile(filePath, buffer);
+    
+    logoUrl = `/uploads/producers/${fileName}`;
+  }
 
   await prisma.producer.update({
     where: { id },

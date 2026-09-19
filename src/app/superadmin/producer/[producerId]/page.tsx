@@ -77,7 +77,16 @@ export default async function ProducerDetailPage({ params }: ProducerDetailPageP
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">URL del Logo</label>
+              <label className="block text-xs text-gray-400 mb-1">Subir Nuevo Logo (Archivo)</label>
+              <input 
+                name="logoFile" 
+                type="file" 
+                accept="image/*"
+                className="w-full bg-[#1e293b] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white"
+              />
+            </div>
+            <div className="mt-2">
+              <label className="block text-xs text-gray-400 mb-1">O mantener/usar URL del Logo</label>
               <input 
                 name="logoUrl" 
                 type="url" 

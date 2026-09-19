@@ -16,9 +16,27 @@ export default async function SuperAdminPage() {
     "use server";
     const name = formData.get("name") as string;
     const subdomain = formData.get("subdomain") as string;
-    const logoUrl = formData.get("logoUrl") as string;
+    const logoFile = formData.get("logoFile") as File;
+    let logoUrl = formData.get("logoUrl") as string;
     
     if (!name || !subdomain) return;
+
+    if (logoFile && logoFile.size > 0) {
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      
+      const bytes = await logoFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      
+      const fileName = `${Date.now()}-${logoFile.name.replace(/\s+/g, '-')}`;
+      const uploadDir = path.join(process.cwd(), "public/uploads/producers");
+      
+      await fs.mkdir(uploadDir, { recursive: true });
+      const filePath = path.join(uploadDir, fileName);
+      await fs.writeFile(filePath, buffer);
+      
+      logoUrl = `/uploads/producers/${fileName}`;
+    }
 
     await prisma.producer.create({
       data: { name, subdomain, logoUrl: logoUrl || null }
@@ -62,7 +80,16 @@ export default async function SuperAdminPage() {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-300 mb-1">URL del Logo (Opcional)</label>
+              <label className="block text-sm text-gray-300 mb-1">Subir Logo (Archivo)</label>
+              <input 
+                name="logoFile" 
+                type="file" 
+                accept="image/*"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-hover"
+              />
+            </div>
+            <div className="mt-2">
+              <label className="block text-sm text-gray-300 mb-1">O usar URL de imagen existente</label>
               <input 
                 name="logoUrl" 
                 type="url" 
