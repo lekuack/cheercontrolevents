@@ -511,7 +511,7 @@ export default function TvLiveDisplay({
 
               {/* DETALLE DEL EQUIPO SELECCIONADO */}
               {selectedTeamId && (() => {
-                const selectedSchedule = teamSchedules.find(s => s.id === selectedTeamId || s.team?.id === selectedTeamId);
+                const selectedSchedule = teamSchedules.find(s => s.id === selectedTeamId || (s.team as any)?.id === selectedTeamId);
                 if (!selectedSchedule) return null;
 
                 const getStatusDetail = (status: string) => {
