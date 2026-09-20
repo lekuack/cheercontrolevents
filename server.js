@@ -36,6 +36,19 @@ app.prepare().then(() => {
       io.to(data.eventId).emit("announcer-alert", data);
     });
 
+    // Handle TV pairing signals
+    socket.on("join-tv-pairing", (pin) => {
+      socket.join(`tv-${pin}`);
+      console.log(`Socket ${socket.id} joined TV pairing room tv-${pin}`);
+    });
+
+    socket.on("pair-tv-event", (data) => {
+      if (data && data.pin && data.eventId) {
+        io.to(`tv-${data.pin}`).emit("tv-paired", data);
+        console.log(`TV pairing PIN ${data.pin} linked to event ${data.eventId}`);
+      }
+    });
+
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
     });

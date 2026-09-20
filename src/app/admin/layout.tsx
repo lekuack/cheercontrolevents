@@ -54,9 +54,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               <Link href="/announcer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-500/10 text-gray-400 hover:text-purple-300 transition-colors text-xs font-medium">
                 <span>🎤</span> Panel Animador
               </Link>
-              <Link href="/tv" className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-500/10 text-gray-400 hover:text-purple-300 transition-colors text-xs font-medium">
-                <span>📺</span> Pantalla TV
+              <Link href="/admin/tv-pair" className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-500/10 text-gray-400 hover:text-purple-300 transition-colors text-xs font-medium">
+                <span>📺</span> Vincular Pantalla TV
               </Link>
+              <a href="/tv" target="_blank" rel="noreferrer" className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-500/10 text-gray-400 hover:text-purple-300 transition-colors text-xs font-medium">
+                <span>🖥️</span> Abrir TV (`/tv`)
+              </a>
               <Link href="/public" className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-500/10 text-gray-400 hover:text-purple-300 transition-colors text-xs font-medium">
                 <span>🏆</span> Vista Pública
               </Link>
