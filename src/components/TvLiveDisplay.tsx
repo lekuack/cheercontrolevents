@@ -668,9 +668,9 @@ export default function TvLiveDisplay({
           <div className="flex items-center justify-between border-b border-white/10 pb-3 2xl:pb-6">
             <h3 className="font-black text-white text-lg 2xl:text-3xl 3xl:text-4xl uppercase tracking-wide flex items-center gap-2">
               <span>📋 Cronograma de Próximas Salidas</span>
-              <span className="text-xs 2xl:text-xl text-gray-400 font-normal">({upcomingSchedules.length} Pendientes)</span>
+              <span className="text-xs 2xl:text-xl text-gray-300 font-normal">({upcomingSchedules.length} Pendientes)</span>
             </h3>
-            <span className="text-xs 2xl:text-xl text-primary font-mono font-bold flex items-center gap-2">
+            <span className="text-xs 2xl:text-2xl text-primary font-mono font-bold flex items-center gap-2">
               <span className="w-2.5 h-2.5 2xl:w-4 2xl:h-4 bg-emerald-400 rounded-full animate-ping" />
               <span>Desplazamiento Automático Continuo ⬇️</span>
             </span>
@@ -682,48 +682,42 @@ export default function TvLiveDisplay({
           >
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 bg-[#0f172a] z-10 shadow-md">
-                <tr className="border-b border-white/10 text-gray-400 text-xs 2xl:text-xl 3xl:text-2xl uppercase tracking-wider">
-                  <th className="py-3 px-3 2xl:py-5 2xl:px-5">#</th>
-                  <th className="py-3 px-3 2xl:py-5 2xl:px-5">Equipo</th>
-                  <th className="py-3 px-3 2xl:py-5 2xl:px-5">Institución</th>
-                  <th className="py-3 px-3 2xl:py-5 2xl:px-5 text-center">Registro</th>
-                  <th className="py-3 px-3 2xl:py-5 2xl:px-5 text-center">Calentamiento</th>
-                  <th className="py-3 px-3 2xl:py-5 2xl:px-5 text-center">Springfloor</th>
-                  <th className="py-3 px-3 2xl:py-5 2xl:px-5 text-center">Presentación</th>
-                  <th className="py-3 px-3 2xl:py-5 2xl:px-5 text-center">Estado</th>
+                <tr className="border-b border-white/20 text-purple-300 text-xs 2xl:text-2xl 3xl:text-3xl font-black uppercase tracking-wider">
+                  <th className="py-3 px-3 2xl:py-6 2xl:px-6">#</th>
+                  <th className="py-3 px-3 2xl:py-6 2xl:px-6">Equipo</th>
+                  <th className="py-3 px-3 2xl:py-6 2xl:px-6">Institución</th>
+                  <th className="py-3 px-3 2xl:py-6 2xl:px-6 text-center">Hora Presentación</th>
+                  <th className="py-3 px-3 2xl:py-6 2xl:px-6 text-center">Estado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-white/10">
                 {tickerSchedules.map((s) => (
                   <tr key={s.id} className={`hover:bg-white/5 transition-colors ${s.status === "COMPETING" ? "bg-red-500/20 font-bold" : ""}`}>
-                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 font-mono font-bold text-amber-400 text-base 2xl:text-2xl 3xl:text-3xl">#{s.orderIndex}</td>
-                    <td className="py-3 px-3 2xl:py-6 2xl:px-5">
-                      <div className="flex items-center gap-3 2xl:gap-5">
+                    <td className="py-3 px-3 2xl:py-7 2xl:px-6 font-mono font-black text-amber-400 text-base 2xl:text-3xl 3xl:text-4xl">#{s.orderIndex}</td>
+                    <td className="py-3 px-3 2xl:py-7 2xl:px-6">
+                      <div className="flex items-center gap-3 2xl:gap-6">
                         {s.team?.institution.logoUrl ? (
                           <img
                             src={s.team.institution.logoUrl}
                             alt={s.team.institution.name}
-                            className="w-8 h-8 2xl:w-16 2xl:h-16 3xl:w-20 3xl:h-20 rounded-xl object-cover border border-white/20 shrink-0 bg-black/40"
+                            className="w-8 h-8 2xl:w-20 2xl:h-20 3xl:w-24 3xl:h-24 rounded-xl object-cover border border-white/30 shrink-0 bg-black/40"
                           />
                         ) : (
-                          <div className="w-8 h-8 2xl:w-16 2xl:h-16 3xl:w-20 3xl:h-20 rounded-xl bg-gradient-to-tr from-primary to-purple-600 border border-white/20 flex items-center justify-center font-black text-white text-xs 2xl:text-2xl shrink-0">
+                          <div className="w-8 h-8 2xl:w-20 2xl:h-20 3xl:w-24 3xl:h-24 rounded-xl bg-gradient-to-tr from-primary to-purple-600 border border-white/30 flex items-center justify-center font-black text-white text-xs 2xl:text-3xl shrink-0">
                             {s.team?.name?.charAt(0) || "🏆"}
                           </div>
                         )}
-                        <span className="font-bold text-white text-base 2xl:text-2xl 3xl:text-3xl leading-snug">{s.team?.name}</span>
+                        <span className="font-extrabold text-white text-base 2xl:text-3xl 3xl:text-4xl leading-snug">{s.team?.name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-gray-300 text-sm 2xl:text-xl 3xl:text-2xl">{s.team?.institution.name}</td>
-                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-center font-mono text-gray-400 text-sm 2xl:text-xl 3xl:text-2xl">{formatTime(s.scheduledRegistration)}</td>
-                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-center font-mono text-gray-400 text-sm 2xl:text-xl 3xl:text-2xl">{formatTime(s.scheduledWarmup1)}</td>
-                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-center font-mono text-gray-400 text-sm 2xl:text-xl 3xl:text-2xl">{formatTime(s.scheduledSpringfloor)}</td>
-                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-center font-mono font-bold text-white text-base 2xl:text-2xl 3xl:text-3xl">{formatTime(s.scheduledPerformance)}</td>
-                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-center">
-                      <span className={`px-3 py-1.5 2xl:px-5 2xl:py-2.5 rounded-xl text-xs 2xl:text-lg font-extrabold ${s.status === "COMPETING"
-                        ? "bg-red-500 text-white animate-pulse"
+                    <td className="py-3 px-3 2xl:py-7 2xl:px-6 text-slate-100 font-semibold text-sm 2xl:text-2xl 3xl:text-3xl">{s.team?.institution.name}</td>
+                    <td className="py-3 px-3 2xl:py-7 2xl:px-6 text-center font-mono font-black text-cyan-300 text-base 2xl:text-3xl 3xl:text-4xl">{formatTime(s.scheduledPerformance)}</td>
+                    <td className="py-3 px-3 2xl:py-7 2xl:px-6 text-center">
+                      <span className={`px-3 py-1.5 2xl:px-6 2xl:py-3 rounded-xl text-xs 2xl:text-2xl font-black ${s.status === "COMPETING"
+                        ? "bg-red-500 text-white animate-pulse shadow-lg"
                         : s.status === "FINISHED"
-                          ? "bg-white/10 text-gray-400"
-                          : "bg-emerald-500/20 text-emerald-300"
+                          ? "bg-white/10 text-gray-300"
+                          : "bg-emerald-500/25 text-emerald-300 border border-emerald-500/40"
                         }`}>
                         {s.status === "COMPETING" ? "🔴 COMPITIENDO" : s.status === "FINISHED" ? "FINALIZADO" : "PENDIENTE"}
                       </span>
