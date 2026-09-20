@@ -1263,8 +1263,18 @@ export async function loginDemoPin(pin: string, role: string, station?: string, 
 
   // Guardar cookies de sesión
   const cookieStore = await cookies();
-  cookieStore.set("userId", user.id, { maxAge: 60 * 60 * 24 * 7, path: "/", httpOnly: true });
-  cookieStore.set("activeProducerId", event.producerId, { maxAge: 60 * 60 * 24 * 7, path: "/" });
+  cookieStore.set("userId", user.id, { 
+    maxAge: 60 * 60 * 24 * 7, 
+    path: "/", 
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production" && process.env.VERCEL === "1"
+  });
+  cookieStore.set("activeProducerId", event.producerId, { 
+    maxAge: 60 * 60 * 24 * 7, 
+    path: "/",
+    sameSite: "lax"
+  });
 
   let targetUrl = `/staff/${event.id}?userId=${user.id}`;
   if (role === "SCREEN") {
