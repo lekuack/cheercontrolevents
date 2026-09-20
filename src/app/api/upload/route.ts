@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
     await writeFile(filePath, buffer);
 
-    const logoUrl = `/uploads/${filename}`;
+    const logoUrl = `/api/uploads/${filename}`;
     return NextResponse.json({ success: true, url: logoUrl });
   } catch (error: any) {
     console.error("Error uploading logo:", error);
