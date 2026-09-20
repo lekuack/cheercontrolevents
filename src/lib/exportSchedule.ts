@@ -7,11 +7,15 @@ type ScheduleWithRelations = Schedule & {
   team?: (Team & { institution: Institution }) | null;
 };
 
+export type SessionWithSchedules = EventSession & {
+  schedules: ScheduleWithRelations[];
+};
+
 export interface ExportOptions {
   format: "excel" | "pdf";
   includeWarnings: boolean;
   eventName: string;
-  sessionName: string;
+  sessionName?: string;
   registrationZonesCount?: number;
   warmupZonesCount?: number;
   springfloorZonesCount?: number;
@@ -108,22 +112,96 @@ export function getExportConflictsAndWarnings(
   return notes;
 }
 
+function sanitizeSheetName(name: string, index: number, usedNames: Set<string>): string {
+  let clean = name.replace(/[:\\/?*\[\]]/g, " ").trim();
+  if (!clean) clean = `Jornada ${index + 1}`;
+  if (clean.length > 30) clean = clean.substring(0, 30);
+
+  let finalName = clean;
+  let counter = 1;
+  while (usedNames.has(finalName.toLowerCase())) {
+    const suffix = `_${counter}`;
+    finalName = `${clean.substring(0, 30 - suffix.length)}${suffix}`;
+    counter++;
+  }
+  usedNames.add(finalName.toLowerCase());
+  return finalName;
+}
+
 export function exportToExcel(
-  items: ScheduleWithRelations[],
+  sessionsInput: SessionWithSchedules[] | ScheduleWithRelations[],
   options: ExportOptions,
-  session?: EventSession
+  singleSessionFallback?: EventSession
 ) {
   const formatTime = (d: Date | null) => (d ? new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-");
 
-  const rows = items.map((item, index) => {
-    const isBreak = item.type === "BREAK";
-    const notes = options.includeWarnings ? getExportConflictsAndWarnings(item, items, session).join(" | ") : "";
+  // Normalizar entrada para manejar tanto SessionWithSchedules[] como ScheduleWithRelations[] legacy
+  let sessions: SessionWithSchedules[] = [];
+  if (Array.isArray(sessionsInput) && sessionsInput.length > 0 && "schedules" in sessionsInput[0]) {
+    sessions = sessionsInput as SessionWithSchedules[];
+  } else if (singleSessionFallback) {
+    sessions = [{ ...singleSessionFallback, schedules: sessionsInput as ScheduleWithRelations[] }];
+  } else {
+    sessions = [{ id: "1", name: options.sessionName || "Jornada 1", schedules: sessionsInput as ScheduleWithRelations[] } as any];
+  }
 
-    if (isBreak) {
+  const wb = XLSX.utils.book_new();
+  const usedSheetNames = new Set<string>();
+
+  for (let sIdx = 0; sIdx < sessions.length; sIdx++) {
+    const session = sessions[sIdx];
+    const items = session.schedules || [];
+
+    const rows = items.map((item, index) => {
+      const isBreak = item.type === "BREAK";
+      const notes = options.includeWarnings ? getExportConflictsAndWarnings(item, items, session).join(" | ") : "";
+
+      if (isBreak) {
+        const baseRow: any = {
+          "#": index + 1,
+          Tipo: "Pausa / Actividad",
+          "Equipo / Actividad": item.breakTitle || "Pausa",
+          Club: "-",
+          Ciudad: "-",
+          Categoría: "-",
+          División: "-",
+          Nivel: "-",
+          "Hora Registro": "-",
+          "Hora Warmup": "-",
+          "Hora Springfloor": "-",
+          "Hora Competencia": formatTime(item.scheduledPerformance),
+        };
+        if (options.includeWarnings) baseRow["Topes / Advertencias"] = notes || "Sin observaciones";
+        return baseRow;
+      }
+
+      const regZone = (options.registrationZonesCount || 1) > 1 && item.registrationZone ? ` (${item.registrationZone})` : "";
+      const w1Zone = (options.warmupZonesCount || 1) > 1 && item.warmupZone ? ` (${item.warmupZone})` : "";
+      const sfZone = (options.springfloorZonesCount || 1) > 1 && item.springfloorZone ? ` (${item.springfloorZone})` : "";
+
       const baseRow: any = {
         "#": index + 1,
-        Tipo: "Pausa / Actividad",
-        "Equipo / Actividad": item.breakTitle || "Pausa",
+        Tipo: item.isExhibition ? "Exhibición" : "Competencia",
+        "Equipo / Actividad": item.team?.name || "-",
+        Club: item.team?.institution?.name || "-",
+        Ciudad: item.team?.institution?.city || "-",
+        Categoría: item.team?.category || "-",
+        División: item.team?.division || "-",
+        Nivel: item.team?.level || "-",
+        "Hora Registro": `${formatTime(item.scheduledRegistration)}${regZone}`,
+        "Hora Warmup": `${formatTime(item.scheduledWarmup1)}${w1Zone}`,
+        "Hora Springfloor": `${formatTime(item.scheduledSpringfloor)}${sfZone}`,
+        "Hora Competencia": formatTime(item.scheduledPerformance),
+      };
+      if (options.includeWarnings) baseRow["Topes / Advertencias"] = notes || "Sin observaciones";
+      return baseRow;
+    });
+
+    if (rows.length === 0) {
+      const emptyRow: any = {
+        "#": "-",
+        Tipo: "-",
+        "Equipo / Actividad": "Sin equipos programados",
         Club: "-",
         Ciudad: "-",
         Categoría: "-",
@@ -132,46 +210,26 @@ export function exportToExcel(
         "Hora Registro": "-",
         "Hora Warmup": "-",
         "Hora Springfloor": "-",
-        "Hora Competencia": formatTime(item.scheduledPerformance),
+        "Hora Competencia": "-",
       };
-      if (options.includeWarnings) baseRow["Topes / Advertencias"] = notes || "Sin observaciones";
-      return baseRow;
+      if (options.includeWarnings) emptyRow["Topes / Advertencias"] = "-";
+      rows.push(emptyRow);
     }
 
-    const regZone = (options.registrationZonesCount || 1) > 1 && item.registrationZone ? ` (${item.registrationZone})` : "";
-    const w1Zone = (options.warmupZonesCount || 1) > 1 && item.warmupZone ? ` (${item.warmupZone})` : "";
-    const sfZone = (options.springfloorZonesCount || 1) > 1 && item.springfloorZone ? ` (${item.springfloorZone})` : "";
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const colWidths = Object.keys(rows[0] || {}).map((key) => ({
+      wch: Math.max(key.length + 3, ...rows.map((r) => String(r[key] || "").length + 2)),
+    }));
+    ws["!cols"] = colWidths;
 
-    const baseRow: any = {
-      "#": index + 1,
-      Tipo: item.isExhibition ? "Exhibición" : "Competencia",
-      "Equipo / Actividad": item.team?.name || "-",
-      Club: item.team?.institution?.name || "-",
-      Ciudad: item.team?.institution?.city || "-",
-      Categoría: item.team?.category || "-",
-      División: item.team?.division || "-",
-      Nivel: item.team?.level || "-",
-      "Hora Registro": `${formatTime(item.scheduledRegistration)}${regZone}`,
-      "Hora Warmup": `${formatTime(item.scheduledWarmup1)}${w1Zone}`,
-      "Hora Springfloor": `${formatTime(item.scheduledSpringfloor)}${sfZone}`,
-      "Hora Competencia": formatTime(item.scheduledPerformance),
-    };
-    if (options.includeWarnings) baseRow["Topes / Advertencias"] = notes || "Sin observaciones";
-    return baseRow;
-  });
-
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(rows);
-
-  const colWidths = Object.keys(rows[0] || {}).map((key) => ({
-    wch: Math.max(key.length + 3, ...rows.map((r) => String(r[key] || "").length + 2)),
-  }));
-  ws["!cols"] = colWidths;
-
-  XLSX.utils.book_append_sheet(wb, ws, "Cronograma");
+    const sheetName = sanitizeSheetName(session.name || `Jornada ${sIdx + 1}`, sIdx, usedSheetNames);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  }
 
   const cleanEventName = options.eventName.replace(/[^a-zA-Z0-9_-]/g, "_");
-  const cleanSessionName = options.sessionName.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const cleanSessionName = sessions.length === 1
+    ? (sessions[0].name || "Jornada").replace(/[^a-zA-Z0-9_-]/g, "_")
+    : "Todas_las_Jornadas";
   const warnSuffix = options.includeWarnings ? "_con_topes" : "";
   const fileName = `Cronograma_${cleanEventName}_${cleanSessionName}${warnSuffix}.xlsx`;
 
@@ -179,11 +237,21 @@ export function exportToExcel(
 }
 
 export function exportToPdf(
-  items: ScheduleWithRelations[],
+  sessionsInput: SessionWithSchedules[] | ScheduleWithRelations[],
   options: ExportOptions,
-  session?: EventSession
+  singleSessionFallback?: EventSession
 ) {
   const formatTime = (d: Date | null) => (d ? new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-");
+
+  // Normalizar entrada
+  let sessions: SessionWithSchedules[] = [];
+  if (Array.isArray(sessionsInput) && sessionsInput.length > 0 && "schedules" in sessionsInput[0]) {
+    sessions = sessionsInput as SessionWithSchedules[];
+  } else if (singleSessionFallback) {
+    sessions = [{ ...singleSessionFallback, schedules: sessionsInput as ScheduleWithRelations[] }];
+  } else {
+    sessions = [{ id: "1", name: options.sessionName || "Jornada 1", schedules: sessionsInput as ScheduleWithRelations[] } as any];
+  }
 
   const doc = new jsPDF({
     orientation: options.includeWarnings ? "landscape" : "portrait",
@@ -191,73 +259,90 @@ export function exportToPdf(
     format: "a4",
   });
 
-  doc.setFontSize(16);
-  doc.setTextColor(15, 23, 42);
-  doc.text(options.eventName, 14, 15);
+  sessions.forEach((session, sIndex) => {
+    if (sIndex > 0) {
+      doc.addPage();
+    }
 
-  doc.setFontSize(10);
-  doc.setTextColor(100, 116, 139);
-  doc.text(`Jornada: ${options.sessionName} | Exportado: ${new Date().toLocaleDateString()}`, 14, 21);
+    doc.setFontSize(16);
+    doc.setTextColor(15, 23, 42);
+    doc.text(options.eventName, 14, 15);
 
-  const head = options.includeWarnings
-    ? [["#", "Equipo / Actividad", "Club / Ciudad", "Cat. / Div.", "Reg.", "Warmup", "Spring", "Comp.", "Topes / Advertencias"]]
-    : [["#", "Equipo / Actividad", "Club / Ciudad", "Cat. / Div.", "Reg.", "Warmup", "Spring", "Comp."]];
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Jornada: ${session.name} | Exportado: ${new Date().toLocaleDateString()}`, 14, 21);
 
-  const body = items.map((item, index) => {
-    const isBreak = item.type === "BREAK";
-    const notes = options.includeWarnings ? getExportConflictsAndWarnings(item, items, session).join("\n") : "";
+    const head = options.includeWarnings
+      ? [["#", "Equipo / Actividad", "Club / Ciudad", "Cat. / Div.", "Reg.", "Warmup", "Spring", "Comp.", "Topes / Advertencias"]]
+      : [["#", "Equipo / Actividad", "Club / Ciudad", "Cat. / Div.", "Reg.", "Warmup", "Spring", "Comp."]];
 
-    if (isBreak) {
+    const items = session.schedules || [];
+
+    const body = items.map((item, index) => {
+      const isBreak = item.type === "BREAK";
+      const notes = options.includeWarnings ? getExportConflictsAndWarnings(item, items, session).join("\n") : "";
+
+      if (isBreak) {
+        const row = [
+          `${index + 1}`,
+          `☕ ${item.breakTitle || "Pausa"} (${item.breakDuration || 0} min)`,
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          formatTime(item.scheduledPerformance),
+        ];
+        if (options.includeWarnings) row.push(notes || "OK");
+        return row;
+      }
+
+      const regZone = (options.registrationZonesCount || 1) > 1 && item.registrationZone ? ` (${item.registrationZone})` : "";
+      const w1Zone = (options.warmupZonesCount || 1) > 1 && item.warmupZone ? ` (${item.warmupZone})` : "";
+      const sfZone = (options.springfloorZonesCount || 1) > 1 && item.springfloorZone ? ` (${item.springfloorZone})` : "";
+
+      const teamName = item.isExhibition ? `${item.team?.name} (Exhibición)` : item.team?.name || "-";
+      const clubCity = `${item.team?.institution?.name || "-"}\n${item.team?.institution?.city || ""}`;
+      const catDiv = `${item.team?.category || "-"}\n${item.team?.division || "-"} ${item.team?.level || ""}`;
+
       const row = [
         `${index + 1}`,
-        `☕ ${item.breakTitle || "Pausa"} (${item.breakDuration} min)`,
-        "-",
-        "-",
-        "-",
-        "-",
-        "-",
+        teamName,
+        clubCity,
+        catDiv,
+        `${formatTime(item.scheduledRegistration)}${regZone}`,
+        `${formatTime(item.scheduledWarmup1)}${w1Zone}`,
+        `${formatTime(item.scheduledSpringfloor)}${sfZone}`,
         formatTime(item.scheduledPerformance),
       ];
       if (options.includeWarnings) row.push(notes || "OK");
       return row;
+    });
+
+    if (body.length === 0) {
+      const emptyRow = ["-", "Sin equipos programados", "-", "-", "-", "-", "-", "-"];
+      if (options.includeWarnings) emptyRow.push("-");
+      body.push(emptyRow);
     }
 
-    const regZone = (options.registrationZonesCount || 1) > 1 && item.registrationZone ? ` (${item.registrationZone})` : "";
-    const w1Zone = (options.warmupZonesCount || 1) > 1 && item.warmupZone ? ` (${item.warmupZone})` : "";
-    const sfZone = (options.springfloorZonesCount || 1) > 1 && item.springfloorZone ? ` (${item.springfloorZone})` : "";
-
-    const teamName = item.isExhibition ? `${item.team?.name} (Exhibición)` : item.team?.name || "-";
-    const clubCity = `${item.team?.institution?.name || "-"}\n${item.team?.institution?.city || ""}`;
-    const catDiv = `${item.team?.category || "-"}\n${item.team?.division || "-"} ${item.team?.level || ""}`;
-
-    const row = [
-      `${index + 1}`,
-      teamName,
-      clubCity,
-      catDiv,
-      `${formatTime(item.scheduledRegistration)}${regZone}`,
-      `${formatTime(item.scheduledWarmup1)}${w1Zone}`,
-      `${formatTime(item.scheduledSpringfloor)}${sfZone}`,
-      formatTime(item.scheduledPerformance),
-    ];
-    if (options.includeWarnings) row.push(notes || "OK");
-    return row;
-  });
-
-  autoTable(doc, {
-    startY: 25,
-    head: head,
-    body: body,
-    styles: { fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: "bold" },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    margin: { top: 25 },
+    autoTable(doc, {
+      startY: 25,
+      head: head,
+      body: body,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      margin: { top: 25 },
+    });
   });
 
   const cleanEventName = options.eventName.replace(/[^a-zA-Z0-9_-]/g, "_");
-  const cleanSessionName = options.sessionName.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const cleanSessionName = sessions.length === 1
+    ? (sessions[0].name || "Jornada").replace(/[^a-zA-Z0-9_-]/g, "_")
+    : "Todas_las_Jornadas";
   const warnSuffix = options.includeWarnings ? "_con_topes" : "";
   const fileName = `Cronograma_${cleanEventName}_${cleanSessionName}${warnSuffix}.pdf`;
 
   doc.save(fileName);
 }
+

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Schedule, Team, Institution, EventSession } from "@prisma/client";
-import { exportToExcel, exportToPdf } from "@/lib/exportSchedule";
+import { exportToExcel, exportToPdf, SessionWithSchedules } from "@/lib/exportSchedule";
 
 type ScheduleWithRelations = Schedule & {
   team?: (Team & { institution: Institution }) | null;
@@ -14,7 +14,7 @@ interface ExportScheduleModalProps {
   schedules: ScheduleWithRelations[];
   session: EventSession;
   eventName?: string;
-  allSessions?: EventSession[];
+  allSessions?: SessionWithSchedules[];
   registrationZonesCount?: number;
   warmupZonesCount?: number;
   springfloorZonesCount?: number;
@@ -32,6 +32,7 @@ export default function ExportScheduleModal({
   springfloorZonesCount = 1,
 }: ExportScheduleModalProps) {
   const [format, setFormat] = useState<"excel" | "pdf">("excel");
+  const [scope, setScope] = useState<"all" | "current">("all");
   const [includeWarnings, setIncludeWarnings] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
 
@@ -50,13 +51,19 @@ export default function ExportScheduleModal({
         springfloorZonesCount,
       };
 
+      const sessionsToExport: SessionWithSchedules[] =
+        scope === "all" && allSessions.length > 0
+          ? allSessions
+          : [{ ...session, schedules }];
+
       if (format === "excel") {
-        exportToExcel(schedules, options, session);
+        exportToExcel(sessionsToExport, options);
       } else {
-        exportToPdf(schedules, options, session);
+        exportToPdf(sessionsToExport, options);
       }
       onClose();
-    } catch {
+    } catch (err) {
+      console.error(err);
       alert("Ocurrió un error al generar la exportación.");
     } finally {
       setLoading(false);
@@ -71,7 +78,11 @@ export default function ExportScheduleModal({
             <span className="text-2xl">📥</span>
             <div>
               <h3 className="text-lg font-bold text-white">Exportar Cronograma</h3>
-              <p className="text-xs text-gray-400">Jornada: {session.name}</p>
+              <p className="text-xs text-gray-400">
+                {scope === "all" && allSessions.length > 1
+                  ? `Todas las Jornadas (${allSessions.length})`
+                  : `Jornada: ${session.name}`}
+              </p>
             </div>
           </div>
           <button
@@ -115,10 +126,54 @@ export default function ExportScheduleModal({
             </div>
           </div>
 
+          {/* Ámbito de Exportación */}
+          {allSessions.length > 1 && (
+            <div>
+              <label className="block text-xs uppercase font-bold text-gray-400 mb-2">
+                2. Jornadas a Exportar
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setScope("all")}
+                  className={`py-3 px-3 rounded-xl text-xs font-bold transition-all border text-left flex flex-col gap-1 ${
+                    scope === "all"
+                      ? "bg-purple-500/20 border-purple-500 text-purple-300 shadow-lg"
+                      : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <span>📅</span> Todas las Jornadas
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-normal">
+                    Exporta las {allSessions.length} jornadas
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setScope("current")}
+                  className={`py-3 px-3 rounded-xl text-xs font-bold transition-all border text-left flex flex-col gap-1 ${
+                    scope === "current"
+                      ? "bg-purple-500/20 border-purple-500 text-purple-300 shadow-lg"
+                      : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <span>📌</span> Solo {session.name}
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-normal">
+                    Exporta únicamente esta jornada
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Opción de Incluir Advertencias / Topes */}
           <div>
             <label className="block text-xs uppercase font-bold text-gray-400 mb-2">
-              2. Incluir Advertencias y Topes
+              {allSessions.length > 1 ? "3." : "2."} Incluir Advertencias y Topes
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -179,3 +234,4 @@ export default function ExportScheduleModal({
     </div>
   );
 }
+

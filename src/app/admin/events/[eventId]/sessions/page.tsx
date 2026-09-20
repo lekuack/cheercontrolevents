@@ -79,6 +79,7 @@ export default async function SessionsPage({ params }: { params: Promise<{ event
         warmupZonesCount={event.warmupZonesCount}
         springfloorZonesCount={event.springfloorZonesCount}
         registrationZonesCount={event.registrationZonesCount}
+        eventName={event.name}
       />
     </div>
   );

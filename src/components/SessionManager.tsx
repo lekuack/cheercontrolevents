@@ -23,14 +23,16 @@ export default function SessionManager({
   availableTeams,
   warmupZonesCount = 1,
   springfloorZonesCount = 1,
-  registrationZonesCount = 1
+  registrationZonesCount = 1,
+  eventName = "Campeonato"
 }: { 
   eventId: string, 
   sessions: SessionWithSchedule[],
   availableTeams: (Team & { institution: Institution })[],
   warmupZonesCount?: number,
   springfloorZonesCount?: number,
-  registrationZonesCount?: number
+  registrationZonesCount?: number,
+  eventName?: string
 }) {
   const [activeSession, setActiveSession] = useState(sessions[0]?.id || null);
   const [isAddTeamModalOpen, setIsAddTeamModalOpen] = useState(false);
@@ -373,7 +375,7 @@ export default function SessionManager({
           onClose={() => setIsExportModalOpen(false)}
           schedules={activeSessionObj.schedules}
           session={activeSessionObj}
-          eventName="Campeonato"
+          eventName={eventName}
           allSessions={sessions}
           registrationZonesCount={registrationZonesCount}
           warmupZonesCount={warmupZonesCount}
