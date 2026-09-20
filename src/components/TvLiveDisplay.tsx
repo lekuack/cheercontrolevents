@@ -266,7 +266,7 @@ export default function TvLiveDisplay({
                     </div>
                   )}
                   <div className="min-w-0">
-                    <h2 className="text-4xl sm:text-6xl lg:text-7xl 2xl:text-8xl 3xl:text-9xl font-black text-white tracking-tight leading-none drop-shadow-md">
+                    <h2 className="text-4xl sm:text-6xl lg:text-7xl 2xl:text-8xl 3xl:text-9xl font-black text-white tracking-tight leading-none drop-shadow-xl select-none" style={{ fontWeight: 900 }}>
                       {currentPerformance.team?.name}
                     </h2>
                     <p className="text-xl sm:text-3xl 2xl:text-5xl 3xl:text-6xl font-bold text-primary mt-1.5 2xl:mt-4">
