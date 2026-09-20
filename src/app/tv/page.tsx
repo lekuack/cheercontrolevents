@@ -25,25 +25,6 @@ export default function TvQuickPairPage() {
     // Generar inmediatamente la imagen del QR usando API de alta velocidad
     const encodedUrl = encodeURIComponent(targetUrl);
     setQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedUrl}&color=0f172a&bgcolor=ffffff`);
-
-    // Intentar también generar el Data URL local de forma dinámica
-    import("qrcode")
-      .then((QRCodeLib) => {
-        const QRCode = QRCodeLib.default || QRCodeLib;
-        if (QRCode && typeof QRCode.toDataURL === "function") {
-          QRCode.toDataURL(targetUrl, {
-            width: 320,
-            margin: 2,
-            color: {
-              dark: "#0f172a",
-              light: "#ffffff",
-            },
-          })
-            .then((url: string) => setQrUrl(url))
-            .catch(() => {});
-        }
-      })
-      .catch(() => {});
   }, []);
 
   useEffect(() => {
