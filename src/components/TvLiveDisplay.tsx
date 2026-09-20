@@ -558,7 +558,7 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
 
       {/* Sticker Flotante de Alerta de NUEVO HIT ZERO en tiempo real */}
       {activeHitZeroSticker && (
-        <div className="fixed bottom-6 right-6 z-[200] animate-bounce transition-all duration-500 max-w-sm pointer-events-auto">
+        <div className="fixed top-6 right-6 z-[200] animate-bounce transition-all duration-500 max-w-sm pointer-events-auto">
           <div className="glass-panel p-5 border-4 border-amber-300 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-900 text-white rounded-3xl shadow-[0_0_50px_rgba(251,191,36,0.7)] flex items-center gap-4 relative overflow-hidden">
             <button
               onClick={() => setActiveHitZeroSticker(null)}

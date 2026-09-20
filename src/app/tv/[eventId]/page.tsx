@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import TvLiveDisplay from "@/components/TvLiveDisplay";
-import DemoStationSwitcher from "@/components/DemoStationSwitcher";
 import Link from "next/link";
 
 interface Props {
@@ -33,14 +32,6 @@ export default async function DedicatedTvPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-[#070d19] text-white p-4 sm:p-6 space-y-6 flex flex-col justify-between">
       <div>
-        {event.isDemo && (
-          <DemoStationSwitcher
-            eventId={event.id}
-            demoPin={event.demoPin || "1234"}
-            activeRole="SCREEN"
-          />
-        )}
-
         {/* Header Exclusivo TV */}
         <div className="flex items-center justify-between glass-panel p-4 rounded-2xl border border-white/10 mb-6">
           <div className="flex items-center gap-3">
