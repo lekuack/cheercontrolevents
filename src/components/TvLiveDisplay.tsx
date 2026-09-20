@@ -15,7 +15,6 @@ interface ScheduleItem {
   isHitZero?: boolean;
   hitZeroAwarded?: boolean;
   team?: {
-    id?: string;
     name: string;
     division?: string;
     category?: string;
@@ -521,7 +520,7 @@ export default function TvLiveDisplay({
                       return { label: "En Espera de Registro", station: "Pre-Registro", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" };
                     case "IN_REGISTRATION":
                     case "REGISTERED":
-                      return { label: "Registrado en Recinto", station: "Mesa de Registro", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" };
+                      return { label: "Registradose", station: "Mesa de Registro", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" };
                     case "ARRIVED_WARMUP":
                     case "WARMING_UP":
                     case "FINISHED_WARMUP":
@@ -529,14 +528,14 @@ export default function TvLiveDisplay({
                     case "ARRIVED_SPRINGFLOOR":
                     case "WARMING_UP_SPRINGFLOOR":
                     case "FINISHED_SPRINGFLOOR":
-                      return { label: "En Pista Springfloor", station: "Prueba Springfloor", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" };
+                      return { label: "En Springfloor", station: "Prueba Springfloor", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" };
                     case "IN_TRANSIT":
-                      return { label: "En Traslado al Escenario", station: "Trayecto a Pista", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" };
+                      return { label: "En Traslado a Competir", station: "Trayecto a Pista", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" };
                     case "ARRIVED_COMPETITION":
                     case "WAITING":
-                      return { label: "En Boca de Escenario (Siguiente en Salir)", station: "Boca de Escenario", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" };
+                      return { label: "En tunel de Salida (Siguiente en Salir)", station: "Boca de Escenario", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" };
                     case "COMPETING":
-                      return { label: "🔴 COMPITIENDO AHORA EN PISTA", station: "Escenario Principal", color: "bg-red-500 text-white animate-pulse" };
+                      return { label: "🔴 COMPITIENDO AHORA EN TAPETE", station: "Escenario Principal", color: "bg-red-500 text-white animate-pulse" };
                     case "FINISHED":
                       return { label: "🏁 Presentación Finalizada", station: "Rutina Concluida", color: "bg-slate-800 text-gray-300 border-white/10" };
                     default:
@@ -589,11 +588,11 @@ export default function TvLiveDisplay({
 
           {/* MODAL DE SELECCIÓN DE EQUIPO PARA SEGUIMIENTO */}
           {isModalOpen && (
-            <div 
+            <div
               onClick={() => setIsModalOpen(false)}
               className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
             >
-              <div 
+              <div
                 onClick={(e) => e.stopPropagation()}
                 className="glass-panel w-full max-w-xl bg-[#0f172a] border border-primary/40 rounded-2xl shadow-2xl p-6 space-y-4 max-h-[85vh] flex flex-col relative"
               >
@@ -637,11 +636,10 @@ export default function TvLiveDisplay({
                           setSelectedTeamId(s.id);
                           setIsModalOpen(false);
                         }}
-                        className={`w-full p-3 rounded-xl border text-left flex items-center justify-between gap-3 transition-all cursor-pointer ${
-                          isSelected
-                            ? "bg-primary/20 border-primary text-white shadow-lg"
-                            : "bg-white/5 border-white/10 hover:bg-white/10 text-gray-300"
-                        }`}
+                        className={`w-full p-3 rounded-xl border text-left flex items-center justify-between gap-3 transition-all cursor-pointer ${isSelected
+                          ? "bg-primary/20 border-primary text-white shadow-lg"
+                          : "bg-white/5 border-white/10 hover:bg-white/10 text-gray-300"
+                          }`}
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
