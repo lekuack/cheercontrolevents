@@ -19,7 +19,7 @@ const ROLE_OPTIONS: RoleOption[] = [
     id: "reg",
     role: "STAFF",
     station: "REGISTRATION",
-    title: "Mesa de Registro",
+    title: "Registro",
     description: "Check-in inicial y entrega de acreditaciones de equipos",
     icon: "📋",
     color: "from-blue-500/20 to-blue-600/10 border-blue-500/30 text-blue-400"

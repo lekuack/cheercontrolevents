@@ -272,7 +272,7 @@ export default async function StaffEventTrackerPage({
 
   const stationNames: Record<string, string> = {
     "RUNNER": "🏃 Buscador de Equipos (Pre-Registro)",
-    "REGISTRATION": "📥 Mesa de Registro",
+    "REGISTRATION": "📥 Registro",
     "WARMUP_1": "🔥 Calentamiento",
     "SPRINGFLOOR": "🤸 Área de Springfloor",
     "TRANSIT": "🔀 Trayecto / Traslado (Calentamiento a Pista)",
