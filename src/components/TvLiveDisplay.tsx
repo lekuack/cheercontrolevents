@@ -70,8 +70,10 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
   const finishedSchedules = teamSchedules.filter(s => s.status === "FINISHED");
   const lastFinishedPerformance = finishedSchedules.length > 0 ? finishedSchedules[finishedSchedules.length - 1] : null;
 
-  // Último equipo con Hit Zero logrado/otorgado
-  const recentHitZeroTeam = [...finishedSchedules].reverse().find(s => s.isHitZero || s.hitZeroAwarded);
+  // Último equipo con Hit Zero logrado/otorgado (excluyendo la presentación en vivo actual)
+  const recentHitZeroTeam = [...teamSchedules].reverse().find(s => 
+    (s.isHitZero || s.hitZeroAwarded) && s.id !== currentPerformance?.id
+  );
 
   // Próximos equipos pendientes de competir (excluyendo el que compite actualmente)
   const upcomingSchedules = teamSchedules.filter(s => 
