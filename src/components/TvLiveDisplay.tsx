@@ -197,7 +197,7 @@ export default function TvLiveDisplay({
   }, [showScheduleTicker]);
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isFullscreen ? "tv-fullscreen" : ""}`}>
       <SocketSync eventId={eventId} />
 
       {/* Indicador de alternancia visual superior y Botón de Pantalla Completa (oculto en pantalla completa) */}
