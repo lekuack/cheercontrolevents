@@ -687,60 +687,61 @@ export default function TvLiveDisplay({
         </div>
       ) : (
         /* VISTA B: TABLA / HORARIO GENERAL TICKER (Auto-Scroll Automático y Suave) */
-        <div className="glass-panel p-6 2xl:p-12 border border-white/10 rounded-2xl space-y-6 2xl:space-y-10 animate-fade-in">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4 2xl:pb-8">
-            <h3 className="font-black text-white text-xl 2xl:text-4xl 3xl:text-5xl uppercase tracking-wide flex items-center gap-3">
+        <div className="glass-panel p-5 2xl:p-8 border border-white/10 rounded-2xl space-y-4 2xl:space-y-6 animate-fade-in">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3 2xl:pb-5">
+            <h3 className="font-black text-white text-lg 2xl:text-2xl 3xl:text-3xl uppercase tracking-wide flex items-center gap-3">
               <span>📋 Cronograma de Próximas Salidas</span>
-              <span className="text-sm 2xl:text-2xl text-gray-300 font-normal">({upcomingSchedules.length} Pendientes)</span>
+              <span className="text-sm 2xl:text-xl text-gray-300 font-normal">({upcomingSchedules.length} Pendientes)</span>
             </h3>
-            <span className="text-sm 2xl:text-3xl text-primary font-mono font-bold flex items-center gap-3">
-              <span className="w-3 h-3 2xl:w-5 2xl:h-5 bg-emerald-400 rounded-full animate-ping" />
+            <span className="text-xs 2xl:text-xl text-primary font-mono font-bold flex items-center gap-2">
+              <span className="w-2.5 h-2.5 2xl:w-3.5 2xl:h-3.5 bg-emerald-400 rounded-full animate-ping" />
               <span>Desplazamiento Automático Continuo ⬇️</span>
             </span>
           </div>
 
           <div
             id="tv-schedule-table-container"
-            className="max-h-[65vh] 2xl:max-h-[75vh] overflow-y-auto pr-1 scroll-smooth"
+            className="max-h-[65vh] 2xl:max-h-[75vh] overflow-y-auto pr-1 scroll-smooth no-scrollbar"
           >
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 bg-[#0f172a] z-10 shadow-md">
-                <tr className="border-b-2 border-white/20 text-purple-300 text-sm 2xl:text-3xl 3xl:text-4xl font-black uppercase tracking-wider">
-                  <th className="py-4 px-4 2xl:py-8 2xl:px-8">#</th>
-                  <th className="py-4 px-4 2xl:py-8 2xl:px-8">Equipo</th>
-                  <th className="py-4 px-4 2xl:py-8 2xl:px-8">Institución</th>
-                  <th className="py-4 px-4 2xl:py-8 2xl:px-8 text-center">Hora Presentación</th>
-                  <th className="py-4 px-4 2xl:py-8 2xl:px-8 text-center">Estado</th>
+                <tr className="border-b-2 border-white/20 text-purple-300 text-xs 2xl:text-xl 3xl:text-2xl font-black uppercase tracking-wider">
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-6">#</th>
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-6">Equipo / Club</th>
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-6 text-center">Hora Presentación</th>
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-6 text-center">Estado</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/15">
                 {tickerSchedules.map((s) => (
                   <tr key={s.id} className={`hover:bg-white/5 transition-colors ${s.status === "COMPETING" ? "bg-red-500/20 font-bold" : ""}`}>
-                    <td className="py-4 px-4 2xl:py-9 2xl:px-8 font-mono font-black text-amber-400 text-xl 2xl:text-4xl 3xl:text-5xl">#{s.orderIndex}</td>
-                    <td className="py-4 px-4 2xl:py-9 2xl:px-8">
-                      <div className="flex items-center gap-4 2xl:gap-8">
+                    <td className="py-3 px-3 2xl:py-5 2xl:px-6 font-mono font-black text-amber-400 text-base 2xl:text-2xl 3xl:text-3xl">#{s.orderIndex}</td>
+                    <td className="py-3 px-3 2xl:py-5 2xl:px-6">
+                      <div className="flex items-center gap-3 2xl:gap-5 min-w-0">
                         {s.team?.institution.logoUrl ? (
                           <img
                             src={s.team.institution.logoUrl}
                             alt={s.team.institution.name}
-                            className="w-10 h-10 2xl:w-24 2xl:h-24 3xl:w-32 3xl:h-32 rounded-2xl object-cover border-2 border-white/40 shrink-0 bg-black/40 shadow-md"
+                            className="w-9 h-9 2xl:w-14 2xl:h-14 3xl:w-16 3xl:h-16 rounded-xl object-cover border border-white/40 shrink-0 bg-black/40 shadow-md"
                           />
                         ) : (
-                          <div className="w-10 h-10 2xl:w-24 2xl:h-24 3xl:w-32 3xl:h-32 rounded-2xl bg-gradient-to-tr from-primary to-purple-600 border-2 border-white/40 flex items-center justify-center font-black text-white text-base 2xl:text-4xl shrink-0 shadow-md">
+                          <div className="w-9 h-9 2xl:w-14 2xl:h-14 3xl:w-16 3xl:h-16 rounded-xl bg-gradient-to-tr from-primary to-purple-600 border border-white/40 flex items-center justify-center font-black text-white text-xs 2xl:text-xl shrink-0 shadow-md">
                             {s.team?.name?.charAt(0) || "🏆"}
                           </div>
                         )}
-                        <span className="font-black text-white text-lg 2xl:text-4xl 3xl:text-5xl leading-snug tracking-tight">{s.team?.name}</span>
+                        <div className="flex flex-wrap items-baseline gap-1.5 2xl:gap-3 min-w-0">
+                          <span className="font-black text-white text-base 2xl:text-2xl 3xl:text-3xl tracking-tight whitespace-nowrap">{s.team?.name}</span>
+                          <span className="text-slate-300 font-semibold text-xs 2xl:text-lg 3xl:text-xl truncate">({s.team?.institution.name})</span>
+                        </div>
                       </div>
                     </td>
-                    <td className="py-4 px-4 2xl:py-9 2xl:px-8 text-slate-100 font-bold text-base 2xl:text-3xl 3xl:text-4xl">{s.team?.institution.name}</td>
-                    <td className="py-4 px-4 2xl:py-9 2xl:px-8 text-center font-mono font-black text-cyan-300 text-lg 2xl:text-4xl 3xl:text-5xl">{formatTime(s.scheduledPerformance)}</td>
-                    <td className="py-4 px-4 2xl:py-9 2xl:px-8 text-center">
-                      <span className={`px-4 py-2 2xl:px-8 2xl:py-4 rounded-2xl text-xs 2xl:text-3xl font-black tracking-wide ${s.status === "COMPETING"
-                        ? "bg-red-500 text-white animate-pulse shadow-xl border-2 border-red-400"
+                    <td className="py-3 px-3 2xl:py-5 2xl:px-6 text-center font-mono font-black text-cyan-300 text-base 2xl:text-2xl 3xl:text-3xl">{formatTime(s.scheduledPerformance)}</td>
+                    <td className="py-3 px-3 2xl:py-5 2xl:px-6 text-center whitespace-nowrap">
+                      <span className={`px-3 py-1.5 2xl:px-5 2xl:py-2.5 rounded-xl text-xs 2xl:text-xl font-black tracking-wide inline-flex items-center gap-2 ${s.status === "COMPETING"
+                        ? "bg-red-500 text-white animate-pulse shadow-xl border border-red-400"
                         : s.status === "FINISHED"
                           ? "bg-white/10 text-gray-300"
-                          : "bg-emerald-500/30 text-emerald-200 border-2 border-emerald-400/50"
+                          : "bg-emerald-500/30 text-emerald-200 border border-emerald-400/50"
                         }`}>
                         {s.status === "COMPETING" ? "🔴 COMPITIENDO" : s.status === "FINISHED" ? "FINALIZADO" : "PENDIENTE"}
                       </span>

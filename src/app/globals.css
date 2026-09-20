@@ -36,19 +36,20 @@ body {
   cursor: none !important;
 }
 
-/* Ocultar barras de scroll horribles por defecto en Smart TVs (Samsung Tizen/LG WebOS/WebKit/Firefox/MS) */
-#tv-schedule-table-container,
-.no-scrollbar {
-  -ms-overflow-style: none;  /* IE y Edge */
-  scrollbar-width: none;  /* Firefox */
+/* Ocultar barras de scroll por completo en Smart TVs y navegadores (Samsung Tizen/LG WebOS/WebKit/Firefox) */
+html, body, #tv-schedule-table-container, .no-scrollbar, *::-webkit-scrollbar {
+  -ms-overflow-style: none !important;  /* IE y Edge */
+  scrollbar-width: none !important;  /* Firefox */
 }
 
+::-webkit-scrollbar,
+*::-webkit-scrollbar,
 #tv-schedule-table-container::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar {
-  display: none;
-  width: 0px;
-  height: 0px;
-  background: transparent; /* Chrome, Safari, Samsung Tizen, Opera */
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important; /* Chrome, Safari, Samsung Tizen, Opera */
 }
 
 .glass-panel {
