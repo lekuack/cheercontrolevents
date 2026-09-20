@@ -23,17 +23,21 @@ export default function TvQuickPairPage() {
     const targetUrl = `${origin}/admin/tv-pair?pin=${newPin}`;
     setPairingUrl(targetUrl);
 
-    // Generar el código QR en Data URL
+    // Generar el código QR en Data URL con colores estándar
     QRCode.toDataURL(targetUrl, {
       width: 320,
       margin: 2,
       color: {
-        dark: "#ffffff",
-        light: "#00000000",
+        dark: "#0f172a",
+        light: "#ffffff",
       },
     })
       .then((url) => setQrUrl(url))
-      .catch((err) => console.error("Error al generar QR:", err));
+      .catch((err) => {
+        console.error("Error al generar QR local:", err);
+        // Fallback a API de QR en línea
+        setQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`);
+      });
   }, []);
 
   useEffect(() => {
@@ -165,14 +169,18 @@ export default function TvQuickPairPage() {
                       Código PIN de la TV
                     </label>
                     <div className="flex items-center gap-2">
-                      {pin.split("").map((digit, idx) => (
-                        <div
-                          key={idx}
-                          className="w-14 h-16 rounded-xl bg-slate-950/80 border border-purple-500/40 text-3xl font-black text-purple-300 flex items-center justify-center shadow-inner"
-                        >
-                          {digit}
-                        </div>
-                      ))}
+                      {pin ? (
+                        pin.split("").map((digit, idx) => (
+                          <div
+                            key={idx}
+                            className="w-14 h-16 rounded-xl bg-slate-950/80 border border-purple-500/40 text-3xl font-black text-purple-300 flex items-center justify-center shadow-inner"
+                          >
+                            {digit}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-gray-400 text-sm animate-pulse font-mono py-4">Generando PIN...</div>
+                      )}
                     </div>
                   </div>
 
