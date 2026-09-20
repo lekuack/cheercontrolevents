@@ -70,6 +70,9 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
   const finishedSchedules = teamSchedules.filter(s => s.status === "FINISHED");
   const lastFinishedPerformance = finishedSchedules.length > 0 ? finishedSchedules[finishedSchedules.length - 1] : null;
 
+  // Último equipo con Hit Zero logrado/otorgado
+  const recentHitZeroTeam = [...finishedSchedules].reverse().find(s => s.isHitZero || s.hitZeroAwarded);
+
   // Próximos equipos pendientes de competir (excluyendo el que compite actualmente)
   const upcomingSchedules = teamSchedules.filter(s => 
     !["FINISHED", "COMPETING"].includes(s.status)
@@ -182,11 +185,6 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
                   {currentPerformance.scheduledPerformance && (
                     <span className="text-sm font-mono font-bold text-gray-300 bg-white/10 px-3 py-1 rounded-xl">
                       ⏰ Hora Programa: {formatTime(currentPerformance.scheduledPerformance)}
-                    </span>
-                  )}
-                  {currentPerformance.isHitZero && (
-                    <span className="bg-amber-400 text-black text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-lg animate-bounce">
-                      🎯 HIT ZERO
                     </span>
                   )}
                 </div>
@@ -345,49 +343,96 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
               </div>
             </div>
 
-            {/* Tarjeta 3: Próximo Equipo 2 */}
-            <div className="glass-panel p-5 border border-purple-500/30 bg-purple-950/20 rounded-2xl space-y-3 flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">⏭️ Siguiente Turno (#2)</span>
-                  <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold px-2 py-0.5 rounded">Preparando</span>
+            {/* Tarjeta 3: Anuncio Hit Zero (Si hay uno activo) o Próximo Equipo #2 */}
+            {recentHitZeroTeam ? (
+              <div className="glass-panel p-5 border-2 border-amber-400/80 bg-gradient-to-br from-amber-950/70 via-amber-900/50 to-slate-950/90 rounded-2xl space-y-3 flex flex-col justify-between shadow-xl shadow-amber-500/10 relative overflow-hidden">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="text-sm">🎯</span> ÚLTIMO HIT ZERO LOGRADO
+                  </span>
+                  <span className="text-[10px] bg-amber-400 text-black font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                    ¡Rutina Limpia!
+                  </span>
                 </div>
 
-                {nextTeam2 ? (
-                  <div className="flex items-center gap-3 space-y-0">
-                    {nextTeam2.team?.institution.logoUrl ? (
-                      <img
-                        src={nextTeam2.team.institution.logoUrl}
-                        alt={nextTeam2.team.institution.name}
-                        className="w-10 h-10 rounded-xl object-cover border border-purple-500/30 shrink-0 bg-black/40"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-700 border border-purple-400/30 flex items-center justify-center font-black text-white text-sm shrink-0">
-                        {nextTeam2.team?.name?.charAt(0) || "🏆"}
-                      </div>
-                    )}
-                    <div className="space-y-0.5 overflow-hidden">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-mono font-bold text-purple-300 bg-purple-400/20 px-1.5 py-0.5 rounded">
-                          #{nextTeam2.orderIndex}
-                        </span>
-                        <h4 className="font-bold text-white text-sm leading-tight truncate">
-                          {nextTeam2.team?.name}
-                        </h4>
-                      </div>
-                      <p className="text-xs text-purple-300 font-semibold truncate">
-                        {nextTeam2.team?.institution.name}
-                      </p>
-                      <p className="text-[10px] text-gray-300 font-mono">
-                        Hora Salida: <strong className="text-white">{formatTime(nextTeam2.scheduledPerformance)}</strong>
-                      </p>
+                <div className="flex items-center gap-3.5 pt-0.5">
+                  {recentHitZeroTeam.team?.institution.logoUrl ? (
+                    <img
+                      src={recentHitZeroTeam.team.institution.logoUrl}
+                      alt={recentHitZeroTeam.team.institution.name}
+                      className="w-11 h-11 rounded-xl object-cover border-2 border-amber-400/60 shrink-0 bg-black/40 shadow-md"
+                    />
+                  ) : (
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-400 to-yellow-600 border-2 border-amber-300 flex items-center justify-center font-black text-black text-xl shrink-0 shadow-md">
+                      🎯
                     </div>
+                  )}
+                  <div className="space-y-0.5 overflow-hidden">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-mono font-black text-amber-950 bg-amber-400 px-1.5 py-0.5 rounded">
+                        #{recentHitZeroTeam.orderIndex}
+                      </span>
+                      <h4 className="font-black text-white text-base leading-tight truncate">
+                        {recentHitZeroTeam.team?.name}
+                      </h4>
+                    </div>
+                    <p className="text-xs text-amber-300 font-bold truncate">
+                      {recentHitZeroTeam.team?.institution.name}
+                    </p>
+                    <p className="text-[10px] text-amber-200/80 font-medium truncate">
+                      {recentHitZeroTeam.team?.category || ""} {recentHitZeroTeam.team?.level ? `• ${recentHitZeroTeam.team.level}` : ""}
+                    </p>
                   </div>
-                ) : (
-                  <p className="text-xs text-gray-500 italic py-4">Sin más turnos en cola.</p>
-                )}
+                </div>
+
+                <div className="bg-amber-400/20 border border-amber-400/30 rounded-xl py-1.5 px-2 text-center text-[10px] font-black text-amber-300 uppercase tracking-widest flex items-center justify-center gap-1">
+                  <span>✨</span> HIT ZERO CONFIRMADO <span>✨</span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="glass-panel p-5 border border-purple-500/30 bg-purple-950/20 rounded-2xl space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">⏭️ Siguiente Turno (#2)</span>
+                    <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold px-2 py-0.5 rounded">Preparando</span>
+                  </div>
+
+                  {nextTeam2 ? (
+                    <div className="flex items-center gap-3 space-y-0">
+                      {nextTeam2.team?.institution.logoUrl ? (
+                        <img
+                          src={nextTeam2.team.institution.logoUrl}
+                          alt={nextTeam2.team.institution.name}
+                          className="w-10 h-10 rounded-xl object-cover border border-purple-500/30 shrink-0 bg-black/40"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-700 border border-purple-400/30 flex items-center justify-center font-black text-white text-sm shrink-0">
+                          {nextTeam2.team?.name?.charAt(0) || "🏆"}
+                        </div>
+                      )}
+                      <div className="space-y-0.5 overflow-hidden">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-mono font-bold text-purple-300 bg-purple-400/20 px-1.5 py-0.5 rounded">
+                            #{nextTeam2.orderIndex}
+                          </span>
+                          <h4 className="font-bold text-white text-sm leading-tight truncate">
+                            {nextTeam2.team?.name}
+                          </h4>
+                        </div>
+                        <p className="text-xs text-purple-300 font-semibold truncate">
+                          {nextTeam2.team?.institution.name}
+                        </p>
+                        <p className="text-[10px] text-gray-300 font-mono">
+                          Hora Salida: <strong className="text-white">{formatTime(nextTeam2.scheduledPerformance)}</strong>
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500 italic py-4">Sin más turnos en cola.</p>
+                  )}
+                </div>
+              </div>
+            )}
 
           </div>
 
