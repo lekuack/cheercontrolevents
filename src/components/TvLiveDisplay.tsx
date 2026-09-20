@@ -559,27 +559,23 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
       {/* Sticker Flotante de Alerta de NUEVO HIT ZERO en tiempo real */}
       {activeHitZeroSticker && (
         <div className="fixed top-6 right-6 z-[200] animate-bounce transition-all duration-500 max-w-sm pointer-events-auto">
-          <div className="glass-panel p-5 border-4 border-amber-300 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-900 text-white rounded-3xl shadow-[0_0_50px_rgba(251,191,36,0.7)] flex items-center gap-4 relative overflow-hidden">
+          <div className="glass-panel p-5 border-4 border-amber-300 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-900 text-white rounded-3xl shadow-[0_0_50px_rgba(251,191,36,0.7)] flex items-center gap-3.5 relative overflow-hidden">
             <button
               onClick={() => setActiveHitZeroSticker(null)}
-              className="absolute top-2 right-2.5 text-black/60 hover:text-black font-extrabold text-xs cursor-pointer bg-white/30 hover:bg-white/50 w-5 h-5 rounded-full flex items-center justify-center"
+              className="absolute top-2 right-2.5 text-black/60 hover:text-black font-extrabold text-xs cursor-pointer bg-white/30 hover:bg-white/50 w-5 h-5 rounded-full flex items-center justify-center z-10"
             >
               ✕
             </button>
 
-            <div className="w-14 h-14 rounded-2xl bg-black/30 border-2 border-amber-200 flex items-center justify-center font-black text-3xl shrink-0 text-amber-300 shadow-inner">
-              🎯
-            </div>
-
-            <div className="space-y-1 pr-3 min-w-0">
+            <div className="space-y-1 pr-4 min-w-0">
               <div className="inline-block bg-black text-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest shadow border border-amber-400/40 animate-pulse">
-                ✨ ¡NUEVO HIT ZERO! ✨
+                ✨ ¡ANUNCIO DE HIT ZERO! ✨
               </div>
-              <h3 className="font-black text-white text-base sm:text-lg leading-tight truncate drop-shadow">
-                {activeHitZeroSticker.team?.name}
+              <h3 className="font-black text-white text-base sm:text-lg leading-tight drop-shadow">
+                ¡Se ha registrado un nuevo Hit Zero!
               </h3>
-              <p className="text-xs font-extrabold text-amber-200 truncate">
-                {activeHitZeroSticker.team?.institution.name}
+              <p className="text-xs font-extrabold text-amber-200">
+                Atentos al anuncio a continuación...
               </p>
             </div>
           </div>
