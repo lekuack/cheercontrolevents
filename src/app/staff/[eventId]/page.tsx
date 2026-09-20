@@ -206,9 +206,10 @@ export default async function StaffEventTrackerPage({
   const activeWarmupZones = Array.from({ length: event.warmupZonesCount || 1 }, (_, i) => `WARMUP_1_${getZoneLetter(i)}`);
   const activeSpringfloorZones = Array.from({ length: event.springfloorZonesCount || 1 }, (_, i) => `SPRINGFLOOR_${getZoneLetter(i)}`);
 
-  const assignedStations = rawStations.map(s => {
+  const assignedStations = Array.from(new Set(rawStations.map(s => {
     if (s === "WARMUP_1") return "WARMUP_1_A";
     if (s === "SPRINGFLOOR") return "SPRINGFLOOR_A";
+    if (s.startsWith("REGISTRATION_")) return "REGISTRATION";
     return s;
   }).filter(stationVal => {
     if (stationVal.startsWith("WARMUP_1_")) {
@@ -218,7 +219,7 @@ export default async function StaffEventTrackerPage({
       return activeSpringfloorZones.includes(stationVal);
     }
     return true;
-  });
+  })));
 
   if (assignedStations.length === 0) {
     // Si es supervisor, mostrar el panel de control general aunque no tenga estación asignada

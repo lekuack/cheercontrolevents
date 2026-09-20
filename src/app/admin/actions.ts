@@ -1229,7 +1229,7 @@ export async function loginDemoPin(pin: string, role: string, station?: string, 
 
   const effectiveStation = station === "WARMUP_1" ? "WARMUP_1_A,WARMUP_1" :
                            station === "SPRINGFLOOR" ? "SPRINGFLOOR_A,SPRINGFLOOR" :
-                           station === "REGISTRATION" ? "REGISTRATION_A,REGISTRATION" : station;
+                           station === "REGISTRATION" ? "REGISTRATION" : station;
 
   let user = await prisma.user.findFirst({
     where: { email }
