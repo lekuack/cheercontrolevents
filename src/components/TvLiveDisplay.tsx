@@ -557,8 +557,8 @@ export default function TvLiveDisplay({
 
       {/* Sticker Flotante de Alerta de NUEVO HIT ZERO en tiempo real */}
       {activeHitZeroSticker && (
-        <div className="fixed top-6 right-6 z-[200] animate-bounce transition-all duration-500 max-w-sm pointer-events-auto">
-          <div className="glass-panel p-5 border-4 border-amber-300 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-900 text-white rounded-3xl shadow-[0_0_50px_rgba(251,191,36,0.7)] flex items-center gap-3.5 relative overflow-hidden">
+        <div className="fixed top-16 right-4 sm:top-20 sm:right-8 z-[9999] animate-bounce transition-all duration-500 max-w-xs sm:max-w-sm pointer-events-auto">
+          <div className="glass-panel p-4 sm:p-5 border-4 border-amber-300 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-900 text-white rounded-3xl shadow-[0_0_60px_rgba(251,191,36,0.85)] flex items-center gap-3.5 relative overflow-hidden">
             <div className="space-y-1 min-w-0">
               <div className="inline-block bg-black text-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest shadow border border-amber-400/40 animate-pulse">
                 ✨ ¡ATENCION! ✨
