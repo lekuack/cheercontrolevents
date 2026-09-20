@@ -158,43 +158,70 @@ export default function TvLiveDisplay({
     if (!showScheduleTicker) return;
 
     let scrollInterval: NodeJS.Timeout;
-    const container = document.getElementById("tv-schedule-table-container");
-    if (container) {
-      container.scrollTop = 0;
-      let direction = 1; // 1 = bajando, -1 = subiendo
-      let isPausing = false;
+    let pauseTimeout: NodeJS.Timeout;
+    let direction = 1; // 1 = bajando, -1 = subiendo
+    let isPausing = false;
+
+    // Usar requestAnimationFrame/setInterval para reintentar hasta encontrar el elemento
+    const startScroll = () => {
+      const container = document.getElementById("tv-schedule-table-container");
+      if (!container) return false;
 
       scrollInterval = setInterval(() => {
-        if (isPausing) return;
+        if (isPausing || !container) return;
+
+        // Verificar si la tabla realmente necesita scroll (si el contenido supera la altura del contenedor)
+        const maxScroll = container.scrollHeight - container.clientHeight;
+        if (maxScroll <= 5) return;
+
+        const currentScroll = container.scrollTop;
 
         if (direction === 1) {
           // Bajando
-          if (container.scrollTop + container.clientHeight >= container.scrollHeight - 4) {
+          if (currentScroll >= maxScroll - 4) {
             isPausing = true;
-            setTimeout(() => {
-              direction = -1; // Invertir dirección hacia arriba
+            pauseTimeout = setTimeout(() => {
+              direction = -1;
               isPausing = false;
-            }, 1200); // Pausa breve abajo
+            }, 1500);
           } else {
-            container.scrollTop += 3; // Avance más rápido y visible
+            const nextScroll = currentScroll + 3;
+            container.scrollTop = nextScroll;
+            // Fallback por si scrollTop no cambia nativamente en algunos navegadores de TV
+            if (container.scrollTop === currentScroll && nextScroll < maxScroll) {
+              container.scrollTop = nextScroll + 2;
+            }
           }
         } else {
           // Subiendo
-          if (container.scrollTop <= 4) {
+          if (currentScroll <= 4) {
             isPausing = true;
-            setTimeout(() => {
-              direction = 1; // Invertir dirección hacia abajo
+            pauseTimeout = setTimeout(() => {
+              direction = 1;
               isPausing = false;
-            }, 1200); // Pausa breve arriba
+            }, 1500);
           } else {
-            container.scrollTop -= 3;
+            container.scrollTop = Math.max(0, currentScroll - 3);
           }
         }
-      }, 30);
-    }
+      }, 35);
 
-    return () => clearInterval(scrollInterval);
-  }, [showScheduleTicker]);
+      return true;
+    };
+
+    // Reintentar si el DOM no está listo inmediatamente
+    const initTimer = setInterval(() => {
+      if (startScroll()) {
+        clearInterval(initTimer);
+      }
+    }, 200);
+
+    return () => {
+      clearInterval(initTimer);
+      if (scrollInterval) clearInterval(scrollInterval);
+      if (pauseTimeout) clearTimeout(pauseTimeout);
+    };
+  }, [showScheduleTicker, tickerSchedules.length]);
 
   return (
     <div className={`space-y-6 ${isFullscreen ? "tv-fullscreen" : ""}`}>
