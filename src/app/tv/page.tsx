@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useId } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import QRCode from "qrcode";
 import { io, Socket } from "socket.io-client";
 
 export default function TvQuickPairPage() {
@@ -19,25 +18,32 @@ export default function TvQuickPairPage() {
     setPin(newPin);
 
     // Obtener la URL base del navegador
-    const origin = window.location.origin;
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
     const targetUrl = `${origin}/admin/tv-pair?pin=${newPin}`;
     setPairingUrl(targetUrl);
 
-    // Generar el código QR en Data URL con colores estándar
-    QRCode.toDataURL(targetUrl, {
-      width: 320,
-      margin: 2,
-      color: {
-        dark: "#0f172a",
-        light: "#ffffff",
-      },
-    })
-      .then((url) => setQrUrl(url))
-      .catch((err) => {
-        console.error("Error al generar QR local:", err);
-        // Fallback a API de QR en línea
-        setQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`);
-      });
+    // Generar inmediatamente la imagen del QR usando API de alta velocidad
+    const encodedUrl = encodeURIComponent(targetUrl);
+    setQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedUrl}&color=0f172a&bgcolor=ffffff`);
+
+    // Intentar también generar el Data URL local de forma dinámica
+    import("qrcode")
+      .then((QRCodeLib) => {
+        const QRCode = QRCodeLib.default || QRCodeLib;
+        if (QRCode && typeof QRCode.toDataURL === "function") {
+          QRCode.toDataURL(targetUrl, {
+            width: 320,
+            margin: 2,
+            color: {
+              dark: "#0f172a",
+              light: "#ffffff",
+            },
+          })
+            .then((url: string) => setQrUrl(url))
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
