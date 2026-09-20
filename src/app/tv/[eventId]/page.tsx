@@ -60,7 +60,7 @@ export default async function DedicatedTvPage({ params }: Props) {
             href="/"
             className="text-xs bg-white/5 hover:bg-white/10 text-gray-400 px-3 py-1.5 rounded-full transition-colors hidden sm:block"
           >
-            🏠 Hub
+            Hub
           </Link>
         </div>
 

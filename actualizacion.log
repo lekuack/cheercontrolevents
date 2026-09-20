@@ -1,0 +1,53 @@
+
+> cheer_manager@0.1.0 build
+> next build
+
+▲ Next.js 16.3.3 (Turbopack)
+- Environments: .env
+✓ Running next.config.ts took 39ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.6s
+  Running TypeScript ...
+  Finished TypeScript in 4.8s ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/14) ...
+  Generating static pages using 3 workers (3/14) 
+  Generating static pages using 3 workers (6/14) 
+  Generating static pages using 3 workers (10/14) 
+prisma:query SELECT `main`.`Producer`.`id`, `main`.`Producer`.`name`, `main`.`Producer`.`subdomain`, `main`.`Producer`.`logoUrl`, `main`.`Producer`.`createdAt`, `main`.`Producer`.`updatedAt`, `main`.`Producer`.`isActive`, COALESCE(`aggr_selection_0_Event`.`_aggr_count_events`, 0) AS `_aggr_count_events`, COALESCE(`aggr_selection_1_User`.`_aggr_count_users`, 0) AS `_aggr_count_users` FROM `main`.`Producer` LEFT JOIN (SELECT `main`.`Event`.`producerId`, COUNT(*) AS `_aggr_count_events` FROM `main`.`Event` WHERE 1=1 GROUP BY `main`.`Event`.`producerId`) AS `aggr_selection_0_Event` ON (`main`.`Producer`.`id` = `aggr_selection_0_Event`.`producerId`) LEFT JOIN (SELECT `main`.`User`.`producerId`, COUNT(*) AS `_aggr_count_users` FROM `main`.`User` WHERE 1=1 GROUP BY `main`.`User`.`producerId`) AS `aggr_selection_1_User` ON (`main`.`Producer`.`id` = `aggr_selection_1_User`.`producerId`) WHERE 1=1 ORDER BY `main`.`Producer`.`createdAt` DESC LIMIT ? OFFSET ?
+prisma:query SELECT `main`.`Producer`.`id`, `main`.`Producer`.`name`, `main`.`Producer`.`subdomain`, `main`.`Producer`.`logoUrl`, `main`.`Producer`.`createdAt`, `main`.`Producer`.`updatedAt`, `main`.`Producer`.`isActive`, COALESCE(`aggr_selection_0_Event`.`_aggr_count_events`, 0) AS `_aggr_count_events` FROM `main`.`Producer` LEFT JOIN (SELECT `main`.`Event`.`producerId`, COUNT(*) AS `_aggr_count_events` FROM `main`.`Event` WHERE 1=1 GROUP BY `main`.`Event`.`producerId`) AS `aggr_selection_0_Event` ON (`main`.`Producer`.`id` = `aggr_selection_0_Event`.`producerId`) WHERE `main`.`Producer`.`isActive` = ? ORDER BY `main`.`Producer`.`name` ASC LIMIT ? OFFSET ?
+✓ Generating static pages using 3 workers (14/14) in 949ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/events/[eventId]
+├ ƒ /admin/events/[eventId]/customization
+├ ƒ /admin/events/[eventId]/sessions
+├ ƒ /admin/events/[eventId]/teams
+├ ƒ /admin/institutions
+├ ƒ /admin/staff
+├ ƒ /announcer
+├ ƒ /announcer/[eventId]
+├ ƒ /api/upload
+├ ○ /demo
+├ ƒ /judge
+├ ƒ /judge/[eventId]
+├ ƒ /login
+├ ƒ /p/[subdomain]
+├ ƒ /p/[subdomain]/[eventId]
+├ ƒ /p/[subdomain]/login
+├ ƒ /staff
+├ ƒ /staff/[eventId]
+├ ƒ /superadmin
+├ ƒ /superadmin/producer/[producerId]
+└ ƒ /tv/[eventId]
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+sh: pm2: command not found

@@ -19,7 +19,7 @@ export default function TvQuickPairPage() {
 
     // Obtener la URL base del navegador
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const targetUrl = `${origin}/admin/tv-pair?pin=${newPin}`;
+    const targetUrl = `${origin}/tv-pair?pin=${newPin}`;
     setPairingUrl(targetUrl);
 
     // Generar inmediatamente la imagen del QR usando API de alta velocidad

@@ -71,12 +71,12 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
   const lastFinishedPerformance = finishedSchedules.length > 0 ? finishedSchedules[finishedSchedules.length - 1] : null;
 
   // Último equipo con Hit Zero logrado/otorgado (excluyendo la presentación en vivo actual)
-  const recentHitZeroTeam = [...teamSchedules].reverse().find(s => 
+  const recentHitZeroTeam = [...teamSchedules].reverse().find(s =>
     (s.isHitZero || s.hitZeroAwarded) && s.id !== currentPerformance?.id
   );
 
   // Próximos equipos pendientes de competir (excluyendo el que compite actualmente)
-  const upcomingSchedules = teamSchedules.filter(s => 
+  const upcomingSchedules = teamSchedules.filter(s =>
     !["FINISHED", "COMPETING"].includes(s.status)
   );
   const nextTeam1 = upcomingSchedules[0];
@@ -100,6 +100,37 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
       delayMinutes = Math.floor((nowTime - scheduledTime) / 60000);
     }
   }
+
+  // Rotación periódica de la Tarjeta 3 (Alternar cada 6s entre "A continuación" y "Último Hit Zero")
+  const [card3Tab, setCard3Tab] = useState<"next" | "hitzero">("next");
+
+  useEffect(() => {
+    if (!recentHitZeroTeam) {
+      setCard3Tab("next");
+      return;
+    }
+    const interval = setInterval(() => {
+      setCard3Tab(prev => (prev === "next" ? "hitzero" : "next"));
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [recentHitZeroTeam]);
+
+  // Animación del Sticker de Alerta de NUEVO HIT ZERO (Esquina Inferior Derecha con Rebote)
+  const [activeHitZeroSticker, setActiveHitZeroSticker] = useState<ScheduleItem | null>(null);
+  const [lastNotifiedHitZeroId, setLastNotifiedHitZeroId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (recentHitZeroTeam && recentHitZeroTeam.id !== lastNotifiedHitZeroId) {
+      setLastNotifiedHitZeroId(recentHitZeroTeam.id);
+      setActiveHitZeroSticker(recentHitZeroTeam);
+      setCard3Tab("hitzero");
+
+      const timer = setTimeout(() => {
+        setActiveHitZeroSticker(null);
+      }, 12000);
+      return () => clearTimeout(timer);
+    }
+  }, [recentHitZeroTeam, lastNotifiedHitZeroId]);
 
   // Alternancia periódica para mostrar el Horario Completo en pantalla cada X segundos
   useEffect(() => {
@@ -170,12 +201,12 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
       {/* VISTA A: PANEL EN VIVO PRINCIPAL (Equipo Actual + Reciente + Próximos 2 + Retraso) */}
       {!showScheduleTicker ? (
         <div className="space-y-6 animate-fade-in">
-          
+
           {/* Ficha Principal Gran Formato: EQUIPO COMPITIENDO AHORA */}
           <div className="glass-panel p-6 sm:p-8 border-2 border-red-500/80 bg-gradient-to-br from-red-950/40 via-slate-900/90 to-slate-950/90 rounded-3xl shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-red-600 text-white text-[11px] font-black px-5 py-1.5 rounded-bl-2xl uppercase tracking-widest flex items-center gap-2 shadow-lg animate-pulse">
               <span className="w-2 h-2 bg-white rounded-full animate-ping" />
-              <span>Compitiendo Ahora en Pista</span>
+              <span>Ahora en Tapete</span>
             </div>
 
             {currentPerformance ? (
@@ -261,7 +292,7 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
             <div className="glass-panel p-5 border border-white/10 bg-slate-900/60 rounded-2xl space-y-3 flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">⏮️ Recién Compitió</span>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">ANTERIORMENTE</span>
                   <span className="text-[10px] bg-white/10 text-gray-300 font-semibold px-2 py-0.5 rounded">Finalizado</span>
                 </div>
 
@@ -305,7 +336,7 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
             <div className="glass-panel p-5 border border-emerald-500/30 bg-emerald-950/20 rounded-2xl space-y-3 flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">⏭️ Siguiente Turno (#1)</span>
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">PROXIMO EQUIPO</span>
                   <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold px-2 py-0.5 rounded">En Espera</span>
                 </div>
 
@@ -345,9 +376,9 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
               </div>
             </div>
 
-            {/* Tarjeta 3: Anuncio Hit Zero (Si hay uno activo) o Próximo Equipo #2 */}
-            {recentHitZeroTeam ? (
-              <div className="glass-panel p-5 border-2 border-amber-400/80 bg-gradient-to-br from-amber-950/70 via-amber-900/50 to-slate-950/90 rounded-2xl space-y-3 flex flex-col justify-between shadow-xl shadow-amber-500/10 relative overflow-hidden">
+            {/* Tarjeta 3: Anuncio Hit Zero (Alternado cada 6s) o Próximo Equipo #2 */}
+            {card3Tab === "hitzero" && recentHitZeroTeam ? (
+              <div className="glass-panel p-5 border-2 border-amber-400/80 bg-gradient-to-br from-amber-950/70 via-amber-900/50 to-slate-950/90 rounded-2xl space-y-3 flex flex-col justify-between shadow-xl shadow-amber-500/10 relative overflow-hidden transition-all duration-500">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="text-sm">🎯</span> ÚLTIMO HIT ZERO LOGRADO
@@ -392,10 +423,10 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
                 </div>
               </div>
             ) : (
-              <div className="glass-panel p-5 border border-purple-500/30 bg-purple-950/20 rounded-2xl space-y-3 flex flex-col justify-between">
+              <div className="glass-panel p-5 border border-purple-500/30 bg-purple-950/20 rounded-2xl space-y-3 flex flex-col justify-between transition-all duration-500">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">⏭️ Siguiente Turno (#2)</span>
+                    <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">DESPUES</span>
                     <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold px-2 py-0.5 rounded">Preparando</span>
                   </div>
 
@@ -465,7 +496,7 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
             </span>
           </div>
 
-          <div 
+          <div
             id="tv-schedule-table-container"
             className="max-h-[60vh] overflow-y-auto pr-1 scroll-smooth"
           >
@@ -508,13 +539,12 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
                     <td className="py-3 px-2 text-center font-mono text-gray-400">{formatTime(s.scheduledSpringfloor)}</td>
                     <td className="py-3 px-2 text-center font-mono font-bold text-white text-sm">{formatTime(s.scheduledPerformance)}</td>
                     <td className="py-3 px-2 text-center">
-                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${
-                        s.status === "COMPETING"
-                          ? "bg-red-500 text-white animate-pulse"
-                          : s.status === "FINISHED"
-                            ? "bg-white/10 text-gray-400"
-                            : "bg-emerald-500/20 text-emerald-300"
-                      }`}>
+                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${s.status === "COMPETING"
+                        ? "bg-red-500 text-white animate-pulse"
+                        : s.status === "FINISHED"
+                          ? "bg-white/10 text-gray-400"
+                          : "bg-emerald-500/20 text-emerald-300"
+                        }`}>
                         {s.status === "COMPETING" ? "🔴 COMPITIENDO" : s.status === "FINISHED" ? "FINALIZADO" : "PENDIENTE"}
                       </span>
                     </td>
@@ -522,6 +552,36 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Sticker Flotante de Alerta de NUEVO HIT ZERO en tiempo real */}
+      {activeHitZeroSticker && (
+        <div className="fixed bottom-6 right-6 z-[200] animate-bounce transition-all duration-500 max-w-sm pointer-events-auto">
+          <div className="glass-panel p-5 border-4 border-amber-300 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-900 text-white rounded-3xl shadow-[0_0_50px_rgba(251,191,36,0.7)] flex items-center gap-4 relative overflow-hidden">
+            <button
+              onClick={() => setActiveHitZeroSticker(null)}
+              className="absolute top-2 right-2.5 text-black/60 hover:text-black font-extrabold text-xs cursor-pointer bg-white/30 hover:bg-white/50 w-5 h-5 rounded-full flex items-center justify-center"
+            >
+              ✕
+            </button>
+
+            <div className="w-14 h-14 rounded-2xl bg-black/30 border-2 border-amber-200 flex items-center justify-center font-black text-3xl shrink-0 text-amber-300 shadow-inner">
+              🎯
+            </div>
+
+            <div className="space-y-1 pr-3 min-w-0">
+              <div className="inline-block bg-black text-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest shadow border border-amber-400/40 animate-pulse">
+                ✨ ¡NUEVO HIT ZERO! ✨
+              </div>
+              <h3 className="font-black text-white text-base sm:text-lg leading-tight truncate drop-shadow">
+                {activeHitZeroSticker.team?.name}
+              </h3>
+              <p className="text-xs font-extrabold text-amber-200 truncate">
+                {activeHitZeroSticker.team?.institution.name}
+              </p>
+            </div>
           </div>
         </div>
       )}

@@ -17,6 +17,7 @@ export default function DemoStationSwitcher({
   activeStation
 }: DemoStationSwitcherProps) {
   const [loading, setLoading] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
 
   const stations = [
     { id: "reg", role: "STAFF", station: "REGISTRATION", label: "📋 Registro" },
@@ -42,6 +43,19 @@ export default function DemoStationSwitcher({
     }
     setLoading(null);
   };
+
+  if (collapsed) {
+    return (
+      <div className="fixed top-2 right-2 z-[100]">
+        <button
+          onClick={() => setCollapsed(false)}
+          className="bg-purple-900/80 hover:bg-purple-800 text-purple-200 hover:text-white px-3 py-1 rounded-full text-xs font-bold border border-purple-500/40 backdrop-blur-md shadow-lg transition-all"
+        >
+          🧪 Mostrar Selector de Puesto
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-purple-950/95 border-b border-purple-500/30 backdrop-blur-md px-4 py-2 sticky top-0 z-[100] flex items-center justify-between gap-3 text-xs overflow-x-auto shadow-xl">
@@ -70,6 +84,13 @@ export default function DemoStationSwitcher({
             </button>
           );
         })}
+        <button
+          onClick={() => setCollapsed(true)}
+          className="ml-2 px-2 py-1 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/20 text-purple-300 hover:text-white border border-purple-500/30 transition-all cursor-pointer whitespace-nowrap"
+          title="Ocultar barra de puesto"
+        >
+          ✕ Ocultar
+        </button>
       </div>
     </div>
   );
