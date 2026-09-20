@@ -211,80 +211,80 @@ export default function TvLiveDisplay({
         <div className="space-y-6 animate-fade-in">
 
           {/* Ficha Principal Gran Formato: EQUIPO COMPITIENDO AHORA */}
-          <div className="glass-panel p-6 sm:p-8 border-2 border-red-500/80 bg-gradient-to-br from-red-950/40 via-slate-900/90 to-slate-950/90 rounded-3xl shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-red-600 text-white text-[11px] font-black px-5 py-1.5 rounded-bl-2xl uppercase tracking-widest flex items-center gap-2 shadow-lg animate-pulse">
-              <span className="w-2 h-2 bg-white rounded-full animate-ping" />
+          <div className="glass-panel p-6 sm:p-8 2xl:p-12 3xl:p-16 border-2 border-red-500/80 bg-gradient-to-br from-red-950/40 via-slate-900/90 to-slate-950/90 rounded-3xl 2xl:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-red-600 text-white text-[11px] 2xl:text-base 3xl:text-lg font-black px-5 2xl:px-8 py-1.5 2xl:py-2.5 rounded-bl-2xl 2xl:rounded-bl-3xl uppercase tracking-widest flex items-center gap-2 shadow-lg animate-pulse">
+              <span className="w-2 h-2 2xl:w-3.5 2xl:h-3.5 bg-white rounded-full animate-ping" />
               <span>Ahora en Tapete</span>
             </div>
 
             {currentPerformance ? (
-              <div className="space-y-4 pt-2">
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <span className="text-xl font-mono font-black text-red-400 bg-red-500/20 border border-red-500/30 px-3 py-1 rounded-xl">
+              <div className="space-y-4 2xl:space-y-8 pt-2">
+                <div className="flex flex-wrap items-center justify-center gap-3 2xl:gap-6">
+                  <span className="text-xl 2xl:text-3xl 3xl:text-4xl font-mono font-black text-red-400 bg-red-500/20 border border-red-500/30 px-3 2xl:px-6 py-1 2xl:py-2.5 rounded-xl 2xl:rounded-2xl">
                     #{currentPerformance.orderIndex}
                   </span>
                   {currentPerformance.scheduledPerformance && (
-                    <span className="text-sm font-mono font-bold text-gray-300 bg-white/10 px-3 py-1 rounded-xl">
+                    <span className="text-sm 2xl:text-2xl 3xl:text-3xl font-mono font-bold text-gray-300 bg-white/10 px-3 2xl:px-6 py-1 2xl:py-2.5 rounded-xl 2xl:rounded-2xl">
                       ⏰ Hora Programa: {formatTime(currentPerformance.scheduledPerformance)}
                     </span>
                   )}
                 </div>
 
-                <div className="flex flex-col items-center justify-center text-center space-y-3 py-2">
+                <div className="flex flex-col items-center justify-center text-center space-y-3 2xl:space-y-6 py-2 2xl:py-6">
                   {currentPerformance.team?.institution.logoUrl ? (
                     <img
                       src={currentPerformance.team.institution.logoUrl}
                       alt={currentPerformance.team.institution.name}
-                      className="w-20 h-20 sm:w-28 sm:h-28 rounded-3xl object-cover border-2 border-white/20 shadow-2xl shrink-0 bg-black/40"
+                      className="w-20 h-20 sm:w-28 sm:h-28 2xl:w-44 2xl:h-44 3xl:w-56 3xl:h-56 rounded-3xl 2xl:rounded-[2.5rem] object-cover border-2 2xl:border-4 border-white/20 shadow-2xl shrink-0 bg-black/40"
                     />
                   ) : (
-                    <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-primary to-purple-600 border-2 border-white/20 shadow-2xl flex items-center justify-center font-black text-white text-3xl sm:text-5xl shrink-0">
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 2xl:w-44 2xl:h-44 3xl:w-56 3xl:h-56 rounded-3xl 2xl:rounded-[2.5rem] bg-gradient-to-tr from-primary to-purple-600 border-2 2xl:border-4 border-white/20 shadow-2xl flex items-center justify-center font-black text-white text-3xl sm:text-5xl 2xl:text-7xl 3xl:text-8xl shrink-0">
                       {currentPerformance.team?.name?.charAt(0) || "🏆"}
                     </div>
                   )}
                   <div>
-                    <h2 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-tight">
+                    <h2 className="text-4xl sm:text-6xl lg:text-7xl 2xl:text-8xl 3xl:text-9xl font-black text-white tracking-tight leading-tight">
                       {currentPerformance.team?.name}
                     </h2>
-                    <p className="text-xl sm:text-3xl font-bold text-primary mt-1">
+                    <p className="text-xl sm:text-3xl 2xl:text-5xl 3xl:text-6xl font-bold text-primary mt-1 2xl:mt-3">
                       {currentPerformance.team?.institution.name}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-4 border-t border-white/10 text-sm">
-                  <div className="bg-white/5 p-3 rounded-xl">
-                    <span className="text-[10px] text-gray-400 block uppercase font-bold">División</span>
-                    <span className="text-white font-black text-sm sm:text-base">{currentPerformance.team?.division || "N/D"}</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 2xl:gap-8 pt-4 2xl:pt-8 border-t border-white/10 text-sm 2xl:text-xl 3xl:text-2xl">
+                  <div className="bg-white/5 p-3 2xl:p-6 rounded-xl 2xl:rounded-2xl">
+                    <span className="text-[10px] 2xl:text-sm text-gray-400 block uppercase font-bold">División</span>
+                    <span className="text-white font-black text-sm sm:text-base 2xl:text-2xl 3xl:text-3xl">{currentPerformance.team?.division || "N/D"}</span>
                   </div>
-                  <div className="bg-white/5 p-3 rounded-xl">
-                    <span className="text-[10px] text-gray-400 block uppercase font-bold">Categoría</span>
-                    <span className="text-white font-black text-sm sm:text-base">{currentPerformance.team?.category || "N/D"}</span>
+                  <div className="bg-white/5 p-3 2xl:p-6 rounded-xl 2xl:rounded-2xl">
+                    <span className="text-[10px] 2xl:text-base text-gray-400 block uppercase font-bold">Categoría</span>
+                    <span className="text-white font-black text-sm sm:text-base 2xl:text-2xl 3xl:text-3xl">{currentPerformance.team?.category || "N/D"}</span>
                   </div>
-                  <div className="bg-white/5 p-3 rounded-xl">
-                    <span className="text-[10px] text-gray-400 block uppercase font-bold">Nivel</span>
-                    <span className="text-white font-black text-sm sm:text-base">{currentPerformance.team?.level || "N/D"}</span>
+                  <div className="bg-white/5 p-3 2xl:p-6 rounded-xl 2xl:rounded-2xl">
+                    <span className="text-[10px] 2xl:text-base text-gray-400 block uppercase font-bold">Nivel</span>
+                    <span className="text-white font-black text-sm sm:text-base 2xl:text-2xl 3xl:text-3xl">{currentPerformance.team?.level || "N/D"}</span>
                   </div>
-                  <div className="bg-white/5 p-3 rounded-xl">
-                    <span className="text-[10px] text-gray-400 block uppercase font-bold">Ciudad</span>
-                    <span className="text-white font-black text-sm sm:text-base">{currentPerformance.team?.institution.city || "N/D"}</span>
+                  <div className="bg-white/5 p-3 2xl:p-6 rounded-xl 2xl:rounded-2xl">
+                    <span className="text-[10px] 2xl:text-base text-gray-400 block uppercase font-bold">Ciudad</span>
+                    <span className="text-white font-black text-sm sm:text-base 2xl:text-2xl 3xl:text-3xl">{currentPerformance.team?.institution.city || "N/D"}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="py-12 text-center space-y-4">
-                <div className="inline-block bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-extrabold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-md">
+              <div className="py-12 2xl:py-24 text-center space-y-4 2xl:space-y-8">
+                <div className="inline-block bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs sm:text-sm 2xl:text-2xl 3xl:text-3xl font-extrabold px-4 2xl:px-8 py-1.5 2xl:py-3 rounded-full uppercase tracking-widest shadow-md">
                   ⏳ EN ESPERA DEL SIGUIENTE EQUIPO
                 </div>
-                <h3 className="text-4xl sm:text-5xl font-black text-amber-400 uppercase tracking-tight drop-shadow-md">
+                <h3 className="text-4xl sm:text-5xl 2xl:text-7xl 3xl:text-8xl font-black text-amber-400 uppercase tracking-tight drop-shadow-md">
                   JUECES EVALUANDO
                 </h3>
                 {nextTeam1 && (
-                  <div className="pt-2">
-                    <p className="text-xl sm:text-2xl text-emerald-400 font-bold max-w-2xl mx-auto">
-                      Próximo equipo: <span className="text-white font-extrabold bg-emerald-950/60 px-3 py-1 rounded-xl border border-emerald-500/30 inline-block mt-1">{nextTeam1.team?.name}</span>
+                  <div className="pt-2 2xl:pt-6">
+                    <p className="text-xl sm:text-2xl 2xl:text-4xl 3xl:text-5xl text-emerald-400 font-bold max-w-2xl 2xl:max-w-4xl mx-auto">
+                      Próximo equipo: <span className="text-white font-extrabold bg-emerald-950/60 px-3 2xl:px-6 py-1 2xl:py-3 rounded-xl 2xl:rounded-2xl border border-emerald-500/30 inline-block mt-1 2xl:mt-3">{nextTeam1.team?.name}</span>
                     </p>
-                    <p className="text-sm sm:text-base text-gray-300 font-medium mt-1">
+                    <p className="text-sm sm:text-base 2xl:text-2xl 3xl:text-3xl text-gray-300 font-medium mt-1 2xl:mt-4">
                       {nextTeam1.team?.institution.name}
                     </p>
                   </div>
@@ -294,182 +294,182 @@ export default function TvLiveDisplay({
           </div>
 
           {/* Grilla Inferior: Recién Compitió + Próximos 2 Equipos + Alerta de Retraso */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 2xl:gap-10">
 
             {/* Tarjeta 1: Recién Compitió (Pasado) */}
-            <div className="glass-panel p-5 border border-white/10 bg-slate-900/60 rounded-2xl space-y-3 flex flex-col justify-between">
+            <div className="glass-panel p-5 2xl:p-8 border border-white/10 bg-slate-900/60 rounded-2xl 2xl:rounded-3xl space-y-3 2xl:space-y-5 flex flex-col justify-between">
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">ANTERIORMENTE</span>
-                  <span className="text-[10px] bg-white/10 text-gray-300 font-semibold px-2 py-0.5 rounded">Finalizado</span>
+                <div className="flex justify-between items-center mb-2 2xl:mb-4">
+                  <span className="text-xs 2xl:text-lg 3xl:text-xl font-bold text-gray-400 uppercase tracking-wider">ANTERIORMENTE</span>
+                  <span className="text-[10px] 2xl:text-sm bg-white/10 text-gray-300 font-semibold px-2 2xl:px-3.5 py-0.5 2xl:py-1 rounded 2xl:rounded-lg">Finalizado</span>
                 </div>
 
                 {lastFinishedPerformance ? (
-                  <div className="flex items-center gap-3 space-y-0">
+                  <div className="flex items-center gap-3 2xl:gap-5 space-y-0">
                     {lastFinishedPerformance.team?.institution.logoUrl ? (
                       <img
                         src={lastFinishedPerformance.team.institution.logoUrl}
                         alt={lastFinishedPerformance.team.institution.name}
-                        className="w-10 h-10 rounded-xl object-cover border border-white/20 shrink-0 bg-black/40"
+                        className="w-10 h-10 2xl:w-20 2xl:h-20 rounded-xl 2xl:rounded-2xl object-cover border border-white/20 shrink-0 bg-black/40"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-red-600 border border-white/20 flex items-center justify-center font-black text-white text-sm shrink-0">
+                      <div className="w-10 h-10 2xl:w-20 2xl:h-20 rounded-xl 2xl:rounded-2xl bg-gradient-to-tr from-amber-500 to-red-600 border border-white/20 flex items-center justify-center font-black text-white text-sm 2xl:text-2xl shrink-0">
                         {lastFinishedPerformance.team?.name?.charAt(0) || "🏆"}
                       </div>
                     )}
-                    <div className="space-y-0.5 overflow-hidden">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-mono font-bold text-amber-400 bg-amber-400/20 px-1.5 py-0.5 rounded">
+                    <div className="space-y-0.5 2xl:space-y-1 overflow-hidden">
+                      <div className="flex items-center gap-1.5 2xl:gap-3">
+                        <span className="text-xs 2xl:text-lg font-mono font-bold text-amber-400 bg-amber-400/20 px-1.5 2xl:px-3 py-0.5 2xl:py-1 rounded 2xl:rounded-lg">
                           #{lastFinishedPerformance.orderIndex}
                         </span>
-                        <h4 className="font-bold text-white text-sm leading-tight truncate">
+                        <h4 className="font-bold text-white text-sm 2xl:text-2xl 3xl:text-3xl leading-tight truncate">
                           {lastFinishedPerformance.team?.name}
                         </h4>
                       </div>
-                      <p className="text-xs text-primary font-semibold truncate">
+                      <p className="text-xs 2xl:text-lg text-primary font-semibold truncate">
                         {lastFinishedPerformance.team?.institution.name}
                       </p>
-                      <p className="text-[10px] text-gray-400 font-mono">
+                      <p className="text-[10px] 2xl:text-sm text-gray-400 font-mono">
                         Presentación: {formatTime(lastFinishedPerformance.scheduledPerformance)}
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-500 italic py-4">Sin rutinas previas en esta jornada.</p>
+                  <p className="text-xs 2xl:text-lg text-gray-500 italic py-4">Sin rutinas previas en esta jornada.</p>
                 )}
               </div>
             </div>
 
             {/* Tarjeta 2: Próximo Equipo 1 */}
-            <div className="glass-panel p-5 border border-emerald-500/30 bg-emerald-950/20 rounded-2xl space-y-3 flex flex-col justify-between">
+            <div className="glass-panel p-5 2xl:p-8 border border-emerald-500/30 bg-emerald-950/20 rounded-2xl 2xl:rounded-3xl space-y-3 2xl:space-y-5 flex flex-col justify-between">
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">PROXIMO EQUIPO</span>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold px-2 py-0.5 rounded">En Espera</span>
+                <div className="flex justify-between items-center mb-2 2xl:mb-4">
+                  <span className="text-xs 2xl:text-lg 3xl:text-xl font-bold text-emerald-400 uppercase tracking-wider">PROXIMO EQUIPO</span>
+                  <span className="text-[10px] 2xl:text-sm bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold px-2 2xl:px-3.5 py-0.5 2xl:py-1 rounded 2xl:rounded-lg">En Espera</span>
                 </div>
 
                 {nextTeam1 ? (
-                  <div className="flex items-center gap-3 space-y-0">
+                  <div className="flex items-center gap-3 2xl:gap-5 space-y-0">
                     {nextTeam1.team?.institution.logoUrl ? (
                       <img
                         src={nextTeam1.team.institution.logoUrl}
                         alt={nextTeam1.team.institution.name}
-                        className="w-10 h-10 rounded-xl object-cover border border-emerald-500/30 shrink-0 bg-black/40"
+                        className="w-10 h-10 2xl:w-20 2xl:h-20 rounded-xl 2xl:rounded-2xl object-cover border border-emerald-500/30 shrink-0 bg-black/40"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-700 border border-emerald-400/30 flex items-center justify-center font-black text-white text-sm shrink-0">
+                      <div className="w-10 h-10 2xl:w-20 2xl:h-20 rounded-xl 2xl:rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-700 border border-emerald-400/30 flex items-center justify-center font-black text-white text-sm 2xl:text-2xl shrink-0">
                         {nextTeam1.team?.name?.charAt(0) || "🏆"}
                       </div>
                     )}
-                    <div className="space-y-0.5 overflow-hidden">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-mono font-bold text-emerald-300 bg-emerald-400/20 px-1.5 py-0.5 rounded">
+                    <div className="space-y-0.5 2xl:space-y-1 overflow-hidden">
+                      <div className="flex items-center gap-1.5 2xl:gap-3">
+                        <span className="text-xs 2xl:text-lg font-mono font-bold text-emerald-300 bg-emerald-400/20 px-1.5 2xl:px-3 py-0.5 2xl:py-1 rounded 2xl:rounded-lg">
                           #{nextTeam1.orderIndex}
                         </span>
-                        <h4 className="font-bold text-white text-sm leading-tight truncate">
+                        <h4 className="font-bold text-white text-sm 2xl:text-2xl 3xl:text-3xl leading-tight truncate">
                           {nextTeam1.team?.name}
                         </h4>
                       </div>
-                      <p className="text-xs text-emerald-300 font-semibold truncate">
+                      <p className="text-xs 2xl:text-lg text-emerald-300 font-semibold truncate">
                         {nextTeam1.team?.institution.name}
                       </p>
-                      <p className="text-[10px] text-gray-300 font-mono">
+                      <p className="text-[10px] 2xl:text-sm text-gray-300 font-mono">
                         Hora Salida: <strong className="text-white">{formatTime(nextTeam1.scheduledPerformance)}</strong>
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-500 italic py-4">Sin equipos pendientes en lista.</p>
+                  <p className="text-xs 2xl:text-lg text-gray-500 italic py-4">Sin equipos pendientes en lista.</p>
                 )}
               </div>
             </div>
 
             {/* Tarjeta 3: Anuncio Hit Zero (Alternado cada 6s) o Próximo Equipo #2 */}
             {card3Tab === "hitzero" && recentHitZeroTeam ? (
-              <div className="glass-panel p-5 border-2 border-amber-400/80 bg-gradient-to-br from-amber-950/70 via-amber-900/50 to-slate-950/90 rounded-2xl space-y-3 flex flex-col justify-between shadow-xl shadow-amber-500/10 relative overflow-hidden transition-all duration-500">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <span className="text-sm"></span>ÚLTIMO HIT ZERO
+              <div className="glass-panel p-5 2xl:p-8 border-2 border-amber-400/80 bg-gradient-to-br from-amber-950/70 via-amber-900/50 to-slate-950/90 rounded-2xl 2xl:rounded-3xl space-y-3 2xl:space-y-5 flex flex-col justify-between shadow-xl shadow-amber-500/10 relative overflow-hidden transition-all duration-500">
+                <div className="flex justify-between items-center mb-1 2xl:mb-3">
+                  <span className="text-xs 2xl:text-lg 3xl:text-xl font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="text-sm 2xl:text-xl"></span>ÚLTIMO HIT ZERO
                   </span>
-                  <span className="text-[10px] bg-amber-400 text-black font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                  <span className="text-[10px] 2xl:text-sm bg-amber-400 text-black font-black px-2 2xl:px-3.5 py-0.5 2xl:py-1 rounded-full uppercase tracking-wider animate-pulse">
                     ¡Felicitaciones!
                   </span>
                 </div>
 
-                <div className="flex items-center gap-3.5 pt-0.5">
+                <div className="flex items-center gap-3.5 2xl:gap-5 pt-0.5">
                   {recentHitZeroTeam.team?.institution.logoUrl ? (
                     <img
                       src={recentHitZeroTeam.team.institution.logoUrl}
                       alt={recentHitZeroTeam.team.institution.name}
-                      className="w-11 h-11 rounded-xl object-cover border-2 border-amber-400/60 shrink-0 bg-black/40 shadow-md"
+                      className="w-11 h-11 2xl:w-20 2xl:h-20 rounded-xl 2xl:rounded-2xl object-cover border-2 border-amber-400/60 shrink-0 bg-black/40 shadow-md"
                     />
                   ) : (
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-400 to-yellow-600 border-2 border-amber-300 flex items-center justify-center font-black text-black text-xl shrink-0 shadow-md">
+                    <div className="w-11 h-11 2xl:w-20 2xl:h-20 rounded-xl 2xl:rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-600 border-2 border-amber-300 flex items-center justify-center font-black text-black text-xl 2xl:text-3xl shrink-0 shadow-md">
                       🎯
                     </div>
                   )}
-                  <div className="space-y-0.5 overflow-hidden">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-mono font-black text-amber-950 bg-amber-400 px-1.5 py-0.5 rounded">
+                  <div className="space-y-0.5 2xl:space-y-1 overflow-hidden">
+                    <div className="flex items-center gap-1.5 2xl:gap-3">
+                      <span className="text-xs 2xl:text-lg font-mono font-black text-amber-950 bg-amber-400 px-1.5 2xl:px-3 py-0.5 2xl:py-1 rounded 2xl:rounded-lg">
                         #{recentHitZeroTeam.orderIndex}
                       </span>
-                      <h4 className="font-black text-white text-base leading-tight truncate">
+                      <h4 className="font-black text-white text-base 2xl:text-2xl 3xl:text-3xl leading-tight truncate">
                         {recentHitZeroTeam.team?.name}
                       </h4>
                     </div>
-                    <p className="text-xs text-amber-300 font-bold truncate">
+                    <p className="text-xs 2xl:text-lg text-amber-300 font-bold truncate">
                       {recentHitZeroTeam.team?.institution.name}
                     </p>
-                    <p className="text-[10px] text-amber-200/80 font-medium truncate">
+                    <p className="text-[10px] 2xl:text-sm text-amber-200/80 font-medium truncate">
                       {recentHitZeroTeam.team?.category || ""} {recentHitZeroTeam.team?.level ? `• ${recentHitZeroTeam.team.level}` : ""}
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-amber-400/20 border border-amber-400/30 rounded-xl py-1.5 px-2 text-center text-[10px] font-black text-amber-300 uppercase tracking-widest flex items-center justify-center gap-1">
+                <div className="bg-amber-400/20 border border-amber-400/30 rounded-xl 2xl:rounded-2xl py-1.5 2xl:py-3 px-2 text-center text-[10px] 2xl:text-sm font-black text-amber-300 uppercase tracking-widest flex items-center justify-center gap-1">
                   <span>✨</span> HIT ZERO CONFIRMADO <span>✨</span>
                 </div>
               </div>
             ) : (
-              <div className="glass-panel p-5 border border-purple-500/30 bg-purple-950/20 rounded-2xl space-y-3 flex flex-col justify-between transition-all duration-500">
+              <div className="glass-panel p-5 2xl:p-8 border border-purple-500/30 bg-purple-950/20 rounded-2xl 2xl:rounded-3xl space-y-3 2xl:space-y-5 flex flex-col justify-between transition-all duration-500">
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">DESPUES</span>
-                    <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold px-2 py-0.5 rounded">Preparando</span>
+                  <div className="flex justify-between items-center mb-2 2xl:mb-4">
+                    <span className="text-xs 2xl:text-lg 3xl:text-xl font-bold text-purple-300 uppercase tracking-wider">DESPUES</span>
+                    <span className="text-[10px] 2xl:text-sm bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold px-2 2xl:px-3.5 py-0.5 2xl:py-1 rounded 2xl:rounded-lg">Preparando</span>
                   </div>
 
                   {nextTeam2 ? (
-                    <div className="flex items-center gap-3 space-y-0">
+                    <div className="flex items-center gap-3 2xl:gap-5 space-y-0">
                       {nextTeam2.team?.institution.logoUrl ? (
                         <img
                           src={nextTeam2.team.institution.logoUrl}
                           alt={nextTeam2.team.institution.name}
-                          className="w-10 h-10 rounded-xl object-cover border border-purple-500/30 shrink-0 bg-black/40"
+                          className="w-10 h-10 2xl:w-20 2xl:h-20 rounded-xl 2xl:rounded-2xl object-cover border border-purple-500/30 shrink-0 bg-black/40"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-700 border border-purple-400/30 flex items-center justify-center font-black text-white text-sm shrink-0">
+                        <div className="w-10 h-10 2xl:w-20 2xl:h-20 rounded-xl 2xl:rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-700 border border-purple-400/30 flex items-center justify-center font-black text-white text-sm 2xl:text-2xl shrink-0">
                           {nextTeam2.team?.name?.charAt(0) || "🏆"}
                         </div>
                       )}
-                      <div className="space-y-0.5 overflow-hidden">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-mono font-bold text-purple-300 bg-purple-400/20 px-1.5 py-0.5 rounded">
+                      <div className="space-y-0.5 2xl:space-y-1 overflow-hidden">
+                        <div className="flex items-center gap-1.5 2xl:gap-3">
+                          <span className="text-xs 2xl:text-lg font-mono font-bold text-purple-300 bg-purple-400/20 px-1.5 2xl:px-3 py-0.5 2xl:py-1 rounded 2xl:rounded-lg">
                             #{nextTeam2.orderIndex}
                           </span>
-                          <h4 className="font-bold text-white text-sm leading-tight truncate">
+                          <h4 className="font-bold text-white text-sm 2xl:text-2xl 3xl:text-3xl leading-tight truncate">
                             {nextTeam2.team?.name}
                           </h4>
                         </div>
-                        <p className="text-xs text-purple-300 font-semibold truncate">
+                        <p className="text-xs 2xl:text-lg text-purple-300 font-semibold truncate">
                           {nextTeam2.team?.institution.name}
                         </p>
-                        <p className="text-[10px] text-gray-300 font-mono">
+                        <p className="text-[10px] 2xl:text-sm text-gray-300 font-mono">
                           Hora Salida: <strong className="text-white">{formatTime(nextTeam2.scheduledPerformance)}</strong>
                         </p>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-xs text-gray-500 italic py-4">Sin más turnos en cola.</p>
+                    <p className="text-xs 2xl:text-lg text-gray-500 italic py-4">Sin más turnos en cola.</p>
                   )}
                 </div>
               </div>
