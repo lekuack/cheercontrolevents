@@ -37,7 +37,9 @@ export default function PublicEventTabs({ event, isToday }: Props) {
   const totalTeams = teams.length;
   const sessions = event.sessions;
 
-  const allSchedules = sessions.flatMap(s => s.schedules);
+  const allSchedules = (event as any).schedules?.length > 0 
+    ? (event as any).schedules 
+    : sessions.flatMap(s => s.schedules);
 
   // Primer horario de inicio de competencia en toda la jornada
   const firstCompetitionStart = sessions

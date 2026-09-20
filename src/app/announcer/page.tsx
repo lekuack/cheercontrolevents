@@ -25,16 +25,16 @@ export default async function AnnouncerEventsPage({
       ) : (
         <div className="space-y-4">
           {events.map(event => (
-            <Link 
-              key={event.id} 
-              href={{ pathname: `/announcer/${event.id}`, query: userId ? { userId } : {} }} 
+            <Link
+              key={event.id}
+              href={{ pathname: `/announcer/${event.id}`, query: userId ? { userId } : {} }}
               className="block"
             >
               <div className="glass-panel p-5 flex items-center gap-6 hover:bg-white/5 border border-white/10 hover:border-warning/50 transition-all rounded-xl">
                 {event.logoUrl ? (
                   <img src={event.logoUrl} alt="Logo" className="w-14 h-14 rounded-lg object-cover bg-white/5" />
                 ) : (
-                  <div className="w-14 h-14 rounded-lg bg-warning/20 flex items-center justify-center text-2xl border border-warning/30">🏟️</div>
+                  <div className="w-14 h-14 rounded-lg bg-warning/20 flex items-center justify-center text-2xl border border-warning/30"></div>
                 )}
                 <div>
                   <h3 className="font-bold text-white text-xl">{event.name}</h3>

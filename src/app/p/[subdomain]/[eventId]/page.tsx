@@ -20,6 +20,10 @@ export default async function ProducerEventPage({ params }: Props) {
       teams: {
         include: { team: { include: { institution: true } } }
       },
+      schedules: {
+        include: { team: { include: { institution: true } } },
+        orderBy: { orderIndex: "asc" }
+      },
       sessions: {
         orderBy: { date: "asc" },
         include: {

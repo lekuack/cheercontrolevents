@@ -11,11 +11,11 @@ export default function DemoPage() {
     <div className="min-h-screen bg-[#070d19] text-white flex flex-col justify-between p-6">
       <header className="flex items-center justify-between max-w-5xl mx-auto w-full py-4">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">🏟️</span>
+          <span className="text-2xl"></span>
           <span className="font-bold text-lg text-white tracking-wide">CheerControl <span className="text-xs bg-purple-500/20 text-purple-300 font-bold px-2 py-0.5 rounded border border-purple-500/30">Capacitación</span></span>
         </div>
         <Link href="/" className="text-xs text-gray-400 hover:text-white transition-colors">
-          🏠 Hub Principal
+          Hub Principal
         </Link>
       </header>
 
