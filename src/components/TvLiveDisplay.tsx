@@ -70,9 +70,14 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
   const finishedSchedules = teamSchedules.filter(s => s.status === "FINISHED");
   const lastFinishedPerformance = finishedSchedules.length > 0 ? finishedSchedules[finishedSchedules.length - 1] : null;
 
-  // Último equipo con Hit Zero logrado/otorgado (excluyendo la presentación en vivo actual)
+  // Último equipo con Hit Zero ya entregado/anunciado (para la tarjeta fija #3)
   const recentHitZeroTeam = [...teamSchedules].reverse().find(s =>
-    (s.isHitZero || s.hitZeroAwarded) && s.id !== currentPerformance?.id
+    (s.hitZeroAwarded || s.isHitZero) && s.id !== currentPerformance?.id
+  );
+
+  // Equipo con Hit Zero recién marcado por jueces PENDIENTE de ser anunciado/entregado
+  const unannouncedHitZeroTeam = [...teamSchedules].reverse().find(s =>
+    s.isHitZero && !s.hitZeroAwarded && s.id !== currentPerformance?.id
   );
 
   // Próximos equipos pendientes de competir (excluyendo el que compite actualmente)
@@ -115,22 +120,9 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
     return () => clearInterval(interval);
   }, [recentHitZeroTeam]);
 
-  // Animación del Sticker de Alerta de NUEVO HIT ZERO (Esquina Inferior Derecha con Rebote)
-  const [activeHitZeroSticker, setActiveHitZeroSticker] = useState<ScheduleItem | null>(null);
-  const [lastNotifiedHitZeroId, setLastNotifiedHitZeroId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (recentHitZeroTeam && recentHitZeroTeam.id !== lastNotifiedHitZeroId) {
-      setLastNotifiedHitZeroId(recentHitZeroTeam.id);
-      setActiveHitZeroSticker(recentHitZeroTeam);
-      setCard3Tab("hitzero");
-
-      const timer = setTimeout(() => {
-        setActiveHitZeroSticker(null);
-      }, 12000);
-      return () => clearTimeout(timer);
-    }
-  }, [recentHitZeroTeam, lastNotifiedHitZeroId]);
+  // Animación del Sticker de Alerta de NUEVO HIT ZERO en Esquina Superior Derecha
+  // Solo se muestra mientras el Hit Zero NO haya sido marcado como entregado/anunciado (unannouncedHitZeroTeam)
+  const activeHitZeroSticker = unannouncedHitZeroTeam;
 
   // Alternancia periódica para mostrar el Horario Completo en pantalla cada X segundos
   useEffect(() => {
@@ -560,14 +552,7 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
       {activeHitZeroSticker && (
         <div className="fixed top-6 right-6 z-[200] animate-bounce transition-all duration-500 max-w-sm pointer-events-auto">
           <div className="glass-panel p-5 border-4 border-amber-300 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-900 text-white rounded-3xl shadow-[0_0_50px_rgba(251,191,36,0.7)] flex items-center gap-3.5 relative overflow-hidden">
-            <button
-              onClick={() => setActiveHitZeroSticker(null)}
-              className="absolute top-2 right-2.5 text-black/60 hover:text-black font-extrabold text-xs cursor-pointer bg-white/30 hover:bg-white/50 w-5 h-5 rounded-full flex items-center justify-center z-10"
-            >
-              ✕
-            </button>
-
-            <div className="space-y-1 pr-4 min-w-0">
+            <div className="space-y-1 min-w-0">
               <div className="inline-block bg-black text-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest shadow border border-amber-400/40 animate-pulse">
                 ✨ ¡ANUNCIO DE HIT ZERO! ✨
               </div>
