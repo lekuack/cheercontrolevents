@@ -230,23 +230,23 @@ export default function TvLiveDisplay({
                   )}
                 </div>
 
-                <div className="flex flex-col items-center justify-center text-center space-y-3 2xl:space-y-6 py-2 2xl:py-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center text-center sm:text-left gap-4 sm:gap-6 2xl:gap-10 py-3 2xl:py-8">
                   {currentPerformance.team?.institution.logoUrl ? (
                     <img
                       src={currentPerformance.team.institution.logoUrl}
                       alt={currentPerformance.team.institution.name}
-                      className="w-20 h-20 sm:w-28 sm:h-28 2xl:w-44 2xl:h-44 3xl:w-56 3xl:h-56 rounded-3xl 2xl:rounded-[2.5rem] object-cover border-2 2xl:border-4 border-white/20 shadow-2xl shrink-0 bg-black/40"
+                      className="w-24 h-24 sm:w-32 sm:h-32 2xl:w-48 2xl:h-48 3xl:w-60 3xl:h-60 rounded-3xl 2xl:rounded-[2.5rem] object-cover border-2 2xl:border-4 border-white/20 shadow-2xl shrink-0 bg-black/40"
                     />
                   ) : (
-                    <div className="w-20 h-20 sm:w-28 sm:h-28 2xl:w-44 2xl:h-44 3xl:w-56 3xl:h-56 rounded-3xl 2xl:rounded-[2.5rem] bg-gradient-to-tr from-primary to-purple-600 border-2 2xl:border-4 border-white/20 shadow-2xl flex items-center justify-center font-black text-white text-3xl sm:text-5xl 2xl:text-7xl 3xl:text-8xl shrink-0">
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 2xl:w-48 2xl:h-48 3xl:w-60 3xl:h-60 rounded-3xl 2xl:rounded-[2.5rem] bg-gradient-to-tr from-primary to-purple-600 border-2 2xl:border-4 border-white/20 shadow-2xl flex items-center justify-center font-black text-white text-4xl sm:text-6xl 2xl:text-7xl 3xl:text-8xl shrink-0">
                       {currentPerformance.team?.name?.charAt(0) || "🏆"}
                     </div>
                   )}
-                  <div>
-                    <h2 className="text-4xl sm:text-6xl lg:text-7xl 2xl:text-8xl 3xl:text-9xl font-black text-white tracking-tight leading-tight">
+                  <div className="min-w-0">
+                    <h2 className="text-4xl sm:text-6xl lg:text-7xl 2xl:text-8xl 3xl:text-9xl font-black text-white tracking-tight leading-none drop-shadow-md">
                       {currentPerformance.team?.name}
                     </h2>
-                    <p className="text-xl sm:text-3xl 2xl:text-5xl 3xl:text-6xl font-bold text-primary mt-1 2xl:mt-3">
+                    <p className="text-xl sm:text-3xl 2xl:text-5xl 3xl:text-6xl font-bold text-primary mt-1.5 2xl:mt-4">
                       {currentPerformance.team?.institution.name}
                     </p>
                   </div>
@@ -664,62 +664,62 @@ export default function TvLiveDisplay({
         </div>
       ) : (
         /* VISTA B: TABLA / HORARIO GENERAL TICKER (Auto-Scroll Automático y Suave) */
-        <div className="glass-panel p-6 border border-white/10 rounded-2xl space-y-4 animate-fade-in">
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
-            <h3 className="font-black text-white text-lg uppercase tracking-wide flex items-center gap-2">
+        <div className="glass-panel p-6 2xl:p-10 border border-white/10 rounded-2xl space-y-4 2xl:space-y-8 animate-fade-in">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3 2xl:pb-6">
+            <h3 className="font-black text-white text-lg 2xl:text-3xl 3xl:text-4xl uppercase tracking-wide flex items-center gap-2">
               <span>📋 Cronograma de Próximas Salidas</span>
-              <span className="text-xs text-gray-400 font-normal">({upcomingSchedules.length} Pendientes)</span>
+              <span className="text-xs 2xl:text-xl text-gray-400 font-normal">({upcomingSchedules.length} Pendientes)</span>
             </h3>
-            <span className="text-xs text-primary font-mono font-bold flex items-center gap-1.5">
-              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
+            <span className="text-xs 2xl:text-xl text-primary font-mono font-bold flex items-center gap-2">
+              <span className="w-2.5 h-2.5 2xl:w-4 2xl:h-4 bg-emerald-400 rounded-full animate-ping" />
               <span>Desplazamiento Automático Continuo ⬇️</span>
             </span>
           </div>
 
           <div
             id="tv-schedule-table-container"
-            className="max-h-[60vh] overflow-y-auto pr-1 scroll-smooth"
+            className="max-h-[60vh] 2xl:max-h-[70vh] overflow-y-auto pr-1 scroll-smooth"
           >
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 bg-[#0f172a] z-10 shadow-md">
-                <tr className="border-b border-white/10 text-gray-400 text-[10px] uppercase tracking-wider">
-                  <th className="py-2.5 px-2">#</th>
-                  <th className="py-2.5 px-2">Equipo</th>
-                  <th className="py-2.5 px-2">Institución</th>
-                  <th className="py-2.5 px-2 text-center">Registro</th>
-                  <th className="py-2.5 px-2 text-center">Calentamiento</th>
-                  <th className="py-2.5 px-2 text-center">Springfloor</th>
-                  <th className="py-2.5 px-2 text-center">Presentación</th>
-                  <th className="py-2.5 px-2 text-center">Estado</th>
+                <tr className="border-b border-white/10 text-gray-400 text-xs 2xl:text-xl 3xl:text-2xl uppercase tracking-wider">
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-5">#</th>
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-5">Equipo</th>
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-5">Institución</th>
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-5 text-center">Registro</th>
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-5 text-center">Calentamiento</th>
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-5 text-center">Springfloor</th>
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-5 text-center">Presentación</th>
+                  <th className="py-3 px-3 2xl:py-5 2xl:px-5 text-center">Estado</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {tickerSchedules.map((s) => (
                   <tr key={s.id} className={`hover:bg-white/5 transition-colors ${s.status === "COMPETING" ? "bg-red-500/20 font-bold" : ""}`}>
-                    <td className="py-3 px-2 font-mono font-bold text-amber-400 text-sm">#{s.orderIndex}</td>
-                    <td className="py-3 px-2">
-                      <div className="flex items-center gap-2">
+                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 font-mono font-bold text-amber-400 text-base 2xl:text-2xl 3xl:text-3xl">#{s.orderIndex}</td>
+                    <td className="py-3 px-3 2xl:py-6 2xl:px-5">
+                      <div className="flex items-center gap-3 2xl:gap-5">
                         {s.team?.institution.logoUrl ? (
                           <img
                             src={s.team.institution.logoUrl}
                             alt={s.team.institution.name}
-                            className="w-7 h-7 rounded-lg object-cover border border-white/20 shrink-0 bg-black/40"
+                            className="w-8 h-8 2xl:w-16 2xl:h-16 3xl:w-20 3xl:h-20 rounded-xl object-cover border border-white/20 shrink-0 bg-black/40"
                           />
                         ) : (
-                          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-primary to-purple-600 border border-white/20 flex items-center justify-center font-black text-white text-xs shrink-0">
+                          <div className="w-8 h-8 2xl:w-16 2xl:h-16 3xl:w-20 3xl:h-20 rounded-xl bg-gradient-to-tr from-primary to-purple-600 border border-white/20 flex items-center justify-center font-black text-white text-xs 2xl:text-2xl shrink-0">
                             {s.team?.name?.charAt(0) || "🏆"}
                           </div>
                         )}
-                        <span className="font-bold text-white text-sm">{s.team?.name}</span>
+                        <span className="font-bold text-white text-base 2xl:text-2xl 3xl:text-3xl leading-snug">{s.team?.name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-2 text-gray-300">{s.team?.institution.name}</td>
-                    <td className="py-3 px-2 text-center font-mono text-gray-400">{formatTime(s.scheduledRegistration)}</td>
-                    <td className="py-3 px-2 text-center font-mono text-gray-400">{formatTime(s.scheduledWarmup1)}</td>
-                    <td className="py-3 px-2 text-center font-mono text-gray-400">{formatTime(s.scheduledSpringfloor)}</td>
-                    <td className="py-3 px-2 text-center font-mono font-bold text-white text-sm">{formatTime(s.scheduledPerformance)}</td>
-                    <td className="py-3 px-2 text-center">
-                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${s.status === "COMPETING"
+                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-gray-300 text-sm 2xl:text-xl 3xl:text-2xl">{s.team?.institution.name}</td>
+                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-center font-mono text-gray-400 text-sm 2xl:text-xl 3xl:text-2xl">{formatTime(s.scheduledRegistration)}</td>
+                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-center font-mono text-gray-400 text-sm 2xl:text-xl 3xl:text-2xl">{formatTime(s.scheduledWarmup1)}</td>
+                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-center font-mono text-gray-400 text-sm 2xl:text-xl 3xl:text-2xl">{formatTime(s.scheduledSpringfloor)}</td>
+                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-center font-mono font-bold text-white text-base 2xl:text-2xl 3xl:text-3xl">{formatTime(s.scheduledPerformance)}</td>
+                    <td className="py-3 px-3 2xl:py-6 2xl:px-5 text-center">
+                      <span className={`px-3 py-1.5 2xl:px-5 2xl:py-2.5 rounded-xl text-xs 2xl:text-lg font-extrabold ${s.status === "COMPETING"
                         ? "bg-red-500 text-white animate-pulse"
                         : s.status === "FINISHED"
                           ? "bg-white/10 text-gray-400"
