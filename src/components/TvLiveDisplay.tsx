@@ -169,28 +169,28 @@ export default function TvLiveDisplay({
 
         if (direction === 1) {
           // Bajando
-          if (container.scrollTop + container.clientHeight >= container.scrollHeight - 2) {
+          if (container.scrollTop + container.clientHeight >= container.scrollHeight - 4) {
             isPausing = true;
             setTimeout(() => {
               direction = -1; // Invertir dirección hacia arriba
               isPausing = false;
-            }, 2000); // Pausa de 2s abajo antes de subir
+            }, 1200); // Pausa breve abajo
           } else {
-            container.scrollTop += 1;
+            container.scrollTop += 3; // Avance más rápido y visible
           }
         } else {
           // Subiendo
-          if (container.scrollTop <= 2) {
+          if (container.scrollTop <= 4) {
             isPausing = true;
             setTimeout(() => {
               direction = 1; // Invertir dirección hacia abajo
               isPausing = false;
-            }, 2000); // Pausa de 2s arriba antes de volver a bajar
+            }, 1200); // Pausa breve arriba
           } else {
-            container.scrollTop -= 1;
+            container.scrollTop -= 3;
           }
         }
-      }, 50);
+      }, 30);
     }
 
     return () => clearInterval(scrollInterval);
