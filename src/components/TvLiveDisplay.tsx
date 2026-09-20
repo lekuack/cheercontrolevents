@@ -15,6 +15,7 @@ interface ScheduleItem {
   isHitZero?: boolean;
   hitZeroAwarded?: boolean;
   team?: {
+    id?: string;
     name: string;
     division?: string;
     category?: string;
