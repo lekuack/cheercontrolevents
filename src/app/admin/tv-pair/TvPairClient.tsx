@@ -9,7 +9,6 @@ interface EventItem {
   id: string;
   name: string;
   date?: string | Date | null;
-  location?: string | null;
   logoUrl?: string | null;
   sessionsCount?: number;
   schedulesCount?: number;
@@ -185,11 +184,6 @@ export default function TvPairClient({ events }: { events: EventItem[] }) {
 
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-bold text-white truncate">{evt.name}</h3>
-                      {evt.location && (
-                        <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                          <span>📍</span> {evt.location}
-                        </p>
-                      )}
                       {evt.date && (
                         <p className="text-xs text-purple-300/80 font-medium mt-0.5">
                           📅 {new Date(evt.date).toLocaleDateString()}

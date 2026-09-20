@@ -44,7 +44,6 @@ export default async function AdminTvPairPage() {
     id: e.id,
     name: e.name,
     date: e.date,
-    location: e.location,
     logoUrl: e.logoUrl,
     sessionsCount: e.sessions?.length || 0,
   }));
