@@ -161,13 +161,36 @@ export default function TvLiveDisplay({
     const container = document.getElementById("tv-schedule-table-container");
     if (container) {
       container.scrollTop = 0;
+      let direction = 1; // 1 = bajando, -1 = subiendo
+      let isPausing = false;
+
       scrollInterval = setInterval(() => {
-        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 5) {
-          container.scrollTop = 0; // Reiniciar arriba suavemente al llegar al final
+        if (isPausing) return;
+
+        if (direction === 1) {
+          // Bajando
+          if (container.scrollTop + container.clientHeight >= container.scrollHeight - 2) {
+            isPausing = true;
+            setTimeout(() => {
+              direction = -1; // Invertir dirección hacia arriba
+              isPausing = false;
+            }, 2000); // Pausa de 2s abajo antes de subir
+          } else {
+            container.scrollTop += 1;
+          }
         } else {
-          container.scrollTop += 1; // Desplazamiento progresivo más lento y fluido
+          // Subiendo
+          if (container.scrollTop <= 2) {
+            isPausing = true;
+            setTimeout(() => {
+              direction = 1; // Invertir dirección hacia abajo
+              isPausing = false;
+            }, 2000); // Pausa de 2s arriba antes de volver a bajar
+          } else {
+            container.scrollTop -= 1;
+          }
         }
-      }, 70);
+      }, 50);
     }
 
     return () => clearInterval(scrollInterval);
