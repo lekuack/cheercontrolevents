@@ -28,11 +28,15 @@ body {
   min-height: 100vh;
 }
 
-/* Ocultar puntero del mouse en pantalla completa TV */
-:fullscreen, :-webkit-full-screen, .tv-fullscreen {
+/* Ocultar puntero del mouse en pantallas de TV (pantalla completa o ruta /tv/) */
+.tv-mode,
+.tv-fullscreen,
+:fullscreen, :-webkit-full-screen {
   cursor: none !important;
 }
-:fullscreen *, :-webkit-full-screen *, .tv-fullscreen * {
+.tv-mode *,
+.tv-fullscreen *,
+:fullscreen *, :-webkit-full-screen * {
   cursor: none !important;
 }
 

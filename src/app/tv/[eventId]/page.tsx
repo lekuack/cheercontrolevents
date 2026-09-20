@@ -30,7 +30,7 @@ export default async function DedicatedTvPage({ params }: Props) {
   const allSchedules = event.schedules.filter(s => s.type !== "BREAK" && s.team);
 
   return (
-    <div className="min-h-screen bg-[#070d19] text-white p-4 sm:p-6 space-y-6 flex flex-col justify-between">
+    <div className="min-h-screen bg-[#070d19] text-white p-4 sm:p-6 space-y-6 flex flex-col justify-between tv-mode">
       <div>
         {/* Header Exclusivo TV */}
         <div className="flex items-center justify-between glass-panel p-4 rounded-2xl border border-white/10 mb-6">
