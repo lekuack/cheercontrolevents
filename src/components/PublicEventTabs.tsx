@@ -216,13 +216,15 @@ export default function PublicEventTabs({ event, isToday }: Props) {
         </div>
       )}
 
-      {/* ── PESTAÑA: EN VIVO (IDÉNTICO A TV, SIN AUTO-SCROLL DE CRONOGRAMA) ── */}
+      {/* ── PESTAÑA: EN VIVO (IDÉNTICO A TV + BÚSQUEDA DE EQUIPO E INTEGRACIÓN WEB) ── */}
       {activeTab === "envivo" && (
         <div className="pt-4">
           <TvLiveDisplay
             eventId={event.id}
             schedules={allSchedules as any}
             disableTicker={true}
+            hideFullscreenButton={true}
+            showSearchTracker={true}
           />
         </div>
       )}

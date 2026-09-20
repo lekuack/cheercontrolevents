@@ -32,16 +32,23 @@ interface TvLiveDisplayProps {
   schedules: ScheduleItem[];
   tickerIntervalSeconds?: number;
   disableTicker?: boolean;
+  hideFullscreenButton?: boolean;
+  showSearchTracker?: boolean;
 }
 
-export default function TvLiveDisplay({ 
-  eventId, 
-  schedules, 
+export default function TvLiveDisplay({
+  eventId,
+  schedules,
   tickerIntervalSeconds = 12,
-  disableTicker = false
+  disableTicker = false,
+  hideFullscreenButton = false,
+  showSearchTracker = false
 }: TvLiveDisplayProps) {
   const [showScheduleTicker, setShowScheduleTicker] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Alternar pantalla completa
   const toggleFullscreen = () => {
@@ -186,13 +193,15 @@ export default function TvLiveDisplay({
               </span>
             </div>
 
-            <button
-              onClick={toggleFullscreen}
-              className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary-light hover:to-purple-500 text-white font-extrabold px-3.5 py-1.5 rounded-xl border border-primary/40 shadow-lg transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 shrink-0"
-            >
-              <span>⛶</span>
-              <span>Pantalla Completa TV</span>
-            </button>
+            {!hideFullscreenButton && (
+              <button
+                onClick={toggleFullscreen}
+                className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary-light hover:to-purple-500 text-white font-extrabold px-3.5 py-1.5 rounded-xl border border-primary/40 shadow-lg transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 shrink-0"
+              >
+                <span>⛶</span>
+                <span>Pantalla Completa TV</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -380,10 +389,10 @@ export default function TvLiveDisplay({
               <div className="glass-panel p-5 border-2 border-amber-400/80 bg-gradient-to-br from-amber-950/70 via-amber-900/50 to-slate-950/90 rounded-2xl space-y-3 flex flex-col justify-between shadow-xl shadow-amber-500/10 relative overflow-hidden transition-all duration-500">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <span className="text-sm">🎯</span> ÚLTIMO HIT ZERO LOGRADO
+                    <span className="text-sm"></span>ÚLTIMO HIT ZERO
                   </span>
                   <span className="text-[10px] bg-amber-400 text-black font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                    ¡Rutina Limpia!
+                    ¡Felicitaciones!
                   </span>
                 </div>
 
@@ -477,6 +486,179 @@ export default function TvLiveDisplay({
                 <span>Variación aproximada de <strong className="text-yellow-300 font-black">+{delayMinutes} min</strong> de retraso respecto a la hora estimada inicial.</span>
               </div>
               <span className="text-[10px] text-red-400 font-mono font-bold shrink-0">Ajuste Automático</span>
+            </div>
+          )}
+
+          {/* BUSCADOR Y MONITOREO DE EQUIPOS PARA WEB EN VIVO */}
+          {showSearchTracker && (
+            <div className="space-y-4 pt-2">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/5 border border-white/10 p-4 rounded-2xl">
+                <div>
+                  <h3 className="text-base font-black text-white flex items-center gap-2">
+                    <span>🔍</span> Seguimiento en Tiempo Real de tu Equipo
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    Busca tu club o colegio para conocer en qué zona se encuentra actualmente.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary-light hover:to-purple-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl border border-primary/40 shadow-lg transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  {selectedTeamId ? "Cambiar Equipo 📋" : "Buscar Equipo 📋"}
+                </button>
+              </div>
+
+              {/* DETALLE DEL EQUIPO SELECCIONADO */}
+              {selectedTeamId && (() => {
+                const selectedSchedule = teamSchedules.find(s => s.id === selectedTeamId || s.team?.id === selectedTeamId);
+                if (!selectedSchedule) return null;
+
+                const getStatusDetail = (status: string) => {
+                  switch (status) {
+                    case "PENDING":
+                      return { label: "En Espera de Registro", station: "Pre-Registro", color: "bg-blue-500/20 text-blue-300 border-blue-500/30" };
+                    case "IN_REGISTRATION":
+                    case "REGISTERED":
+                      return { label: "Registrado en Recinto", station: "Mesa de Registro", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" };
+                    case "ARRIVED_WARMUP":
+                    case "WARMING_UP":
+                    case "FINISHED_WARMUP":
+                      return { label: "En Zona de Calentamiento", station: "Calentamiento General", color: "bg-orange-500/20 text-orange-300 border-orange-500/30" };
+                    case "ARRIVED_SPRINGFLOOR":
+                    case "WARMING_UP_SPRINGFLOOR":
+                    case "FINISHED_SPRINGFLOOR":
+                      return { label: "En Pista Springfloor", station: "Prueba Springfloor", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" };
+                    case "IN_TRANSIT":
+                      return { label: "En Traslado al Escenario", station: "Trayecto a Pista", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" };
+                    case "ARRIVED_COMPETITION":
+                    case "WAITING":
+                      return { label: "En Boca de Escenario (Siguiente en Salir)", station: "Boca de Escenario", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" };
+                    case "COMPETING":
+                      return { label: "🔴 COMPITIENDO AHORA EN PISTA", station: "Escenario Principal", color: "bg-red-500 text-white animate-pulse" };
+                    case "FINISHED":
+                      return { label: "🏁 Presentación Finalizada", station: "Rutina Concluida", color: "bg-slate-800 text-gray-300 border-white/10" };
+                    default:
+                      return { label: "Programado", station: "Cronograma", color: "bg-white/10 text-gray-300 border-white/10" };
+                  }
+                };
+
+                const detail = getStatusDetail(selectedSchedule.status);
+                return (
+                  <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-white/15 space-y-4 animate-fade-in">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/10 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono font-black text-amber-300 bg-amber-400/20 px-2.5 py-0.5 rounded-md">
+                            #{selectedSchedule.orderIndex}
+                          </span>
+                          <h4 className="text-xl font-black text-white">{selectedSchedule.team?.name}</h4>
+                        </div>
+                        <p className="text-xs text-primary font-semibold mt-0.5">{selectedSchedule.team?.institution.name}</p>
+                      </div>
+
+                      <span className={`px-3 py-1 rounded-full text-xs font-black uppercase border tracking-wider ${detail.color}`}>
+                        {detail.label}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
+                      <div className="bg-white/5 p-3 rounded-xl">
+                        <span className="text-[10px] text-gray-400 uppercase font-bold block">Ubicación Actual</span>
+                        <span className="text-white font-black text-sm">{detail.station}</span>
+                      </div>
+                      <div className="bg-white/5 p-3 rounded-xl">
+                        <span className="text-[10px] text-gray-400 uppercase font-bold block">Hora Presentación</span>
+                        <span className="text-white font-mono font-bold text-sm">{formatTime(selectedSchedule.scheduledPerformance)}</span>
+                      </div>
+                      <div className="bg-white/5 p-3 rounded-xl">
+                        <span className="text-[10px] text-gray-400 uppercase font-bold block">Categoría / Nivel</span>
+                        <span className="text-white font-bold text-xs">{selectedSchedule.team?.division} - {selectedSchedule.team?.category}</span>
+                      </div>
+                      <div className="bg-white/5 p-3 rounded-xl">
+                        <span className="text-[10px] text-gray-400 uppercase font-bold block">Ciudad</span>
+                        <span className="text-white font-bold text-xs">{selectedSchedule.team?.institution.city || "N/D"}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* MODAL DE SELECCIÓN DE EQUIPO PARA SEGUIMIENTO */}
+          {isModalOpen && (
+            <div 
+              onClick={() => setIsModalOpen(false)}
+              className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+            >
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                className="glass-panel w-full max-w-xl bg-[#0f172a] border border-primary/40 rounded-2xl shadow-2xl p-6 space-y-4 max-h-[85vh] flex flex-col relative"
+              >
+                <div className="flex justify-between items-center pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl">📋</span>
+                    <div>
+                      <h4 className="text-lg font-black text-white">Seleccionar Equipo</h4>
+                      <p className="text-xs text-gray-400">Elige un equipo de la lista para ver su seguimiento</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold flex items-center justify-center transition-colors text-sm cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <input
+                  type="text"
+                  placeholder="🔍 Filtrar por nombre de equipo o institución..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                  className="w-full bg-black/50 text-white border border-white/15 focus:border-primary rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+
+                <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                  {teamSchedules.filter(s => {
+                    const q = searchQuery.toLowerCase();
+                    const teamName = s.team?.name.toLowerCase() || "";
+                    const instName = s.team?.institution.name.toLowerCase() || "";
+                    return teamName.includes(q) || instName.includes(q);
+                  }).map((s) => {
+                    const isSelected = selectedTeamId === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => {
+                          setSelectedTeamId(s.id);
+                          setIsModalOpen(false);
+                        }}
+                        className={`w-full p-3 rounded-xl border text-left flex items-center justify-between gap-3 transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-primary/20 border-primary text-white shadow-lg"
+                            : "bg-white/5 border-white/10 hover:bg-white/10 text-gray-300"
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded">
+                              #{s.orderIndex}
+                            </span>
+                            <h5 className="font-bold text-white text-sm truncate">{s.team?.name}</h5>
+                          </div>
+                          <p className="text-xs text-gray-400 truncate mt-0.5">{s.team?.institution.name}</p>
+                        </div>
+                        <span className="text-xs font-bold text-primary">
+                          {isSelected ? "✓ Seleccionado" : "Elegir →"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
 
