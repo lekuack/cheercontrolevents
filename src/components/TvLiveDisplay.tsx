@@ -31,9 +31,15 @@ interface TvLiveDisplayProps {
   eventId: string;
   schedules: ScheduleItem[];
   tickerIntervalSeconds?: number;
+  disableTicker?: boolean;
 }
 
-export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSeconds = 12 }: TvLiveDisplayProps) {
+export default function TvLiveDisplay({ 
+  eventId, 
+  schedules, 
+  tickerIntervalSeconds = 12,
+  disableTicker = false
+}: TvLiveDisplayProps) {
   const [showScheduleTicker, setShowScheduleTicker] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -126,11 +132,12 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
 
   // Alternancia periódica para mostrar el Horario Completo en pantalla cada X segundos
   useEffect(() => {
+    if (disableTicker) return;
     const interval = setInterval(() => {
       setShowScheduleTicker(prev => !prev);
     }, tickerIntervalSeconds * 1000);
     return () => clearInterval(interval);
-  }, [tickerIntervalSeconds]);
+  }, [tickerIntervalSeconds, disableTicker]);
 
   const formatTime = (d: string | Date | null | undefined) => {
     if (!d) return "--:--";
@@ -554,10 +561,10 @@ export default function TvLiveDisplay({ eventId, schedules, tickerIntervalSecond
           <div className="glass-panel p-5 border-4 border-amber-300 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-900 text-white rounded-3xl shadow-[0_0_50px_rgba(251,191,36,0.7)] flex items-center gap-3.5 relative overflow-hidden">
             <div className="space-y-1 min-w-0">
               <div className="inline-block bg-black text-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest shadow border border-amber-400/40 animate-pulse">
-                ✨ ¡ANUNCIO DE HIT ZERO! ✨
+                ✨ ¡ATENCION! ✨
               </div>
               <h3 className="font-black text-white text-base sm:text-lg leading-tight drop-shadow">
-                ¡Se ha registrado un nuevo Hit Zero!
+                ¡Nuevo Equipo Hit Zero!
               </h3>
               <p className="text-xs font-extrabold text-amber-200">
                 Atentos al anuncio a continuación...
